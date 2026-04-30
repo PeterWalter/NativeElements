@@ -2,6 +2,9 @@ using NativeElements.Models;
 using NativeElements.Services;
 using NativeElements.Data;
 using System.Threading.Tasks;
+using SkiaSharp;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Storage;
 
 namespace NativeElements;
 
@@ -48,6 +51,8 @@ public partial class SegmentedRingPage : ContentPage
 
             var output = SegmentedRingMathService.CalculateSegment(input);
             _lastRingOutput = output;
+            // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
+            // RingCanvas?.InvalidateSurface();
 
             // Show results immediately
             RingResultLabel.Text = $"Segment Angle: {output.SegmentAngle:F2}°\n" +
@@ -92,4 +97,48 @@ public partial class SegmentedRingPage : ContentPage
             RingResultLabel.Text = $"Export error: {ex.Message}";
         }
     }
+
+    private async void OnExportRingPdfClicked(object? sender, EventArgs e)
+    {
+        if (_lastRingOutput == null)
+        {
+            RingResultLabel.Text = "Please calculate first before exporting.";
+            return;
+        }
+
+        try
+        {
+            string fileName = $"Ring_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var path = await PdfExportService.ExportRingToPdfAsync(_lastRingOutput, fileName);
+            RingResultLabel.Text = $"PDF exported: {path}";
+            await Launcher.OpenAsync(new OpenFileRequest("Open Export", new ReadOnlyFile(path)));
+        }
+        catch (Exception ex)
+        {
+            RingResultLabel.Text = $"PDF export error: {ex.Message}";
+        }
+    }
+
+    private async void OnPrintRingClicked(object? sender, EventArgs e)
+    {
+        if (_lastRingOutput == null)
+        {
+            RingResultLabel.Text = "Please calculate first before printing.";
+            return;
+        }
+
+        try
+        {
+            await PrintService.PrintRingAsync(_lastRingOutput);
+            RingResultLabel.Text = "Print/share dialog opened.";
+        }
+        catch (Exception ex)
+        {
+            RingResultLabel.Text = $"Print error: {ex.Message}";
+        }
+    }
+
+    // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
+    private void OnRingCanvasPaintSurface(object? sender, object e) { }
 }
+

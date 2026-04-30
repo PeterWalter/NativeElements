@@ -20,10 +20,17 @@
             <Label Text="DPI" FontSize="14" />
             <Entry x:Name="RingDpiEntry" Text="300" Keyboard="Numeric" />
             
-            <Button x:Name="CalculateRingButton" Text="Calculate" Clicked="OnCalculateRingClicked" />
-            <Button x:Name="ExportRingDxfButton" Text="Export DXF" Clicked="OnExportRingDxfClicked" />
-            
+            <HorizontalStackLayout Spacing="10">
+                <Button x:Name="CalculateRingButton" Text="Calculate" Clicked="OnCalculateRingClicked" />
+                <Button x:Name="ExportRingPdfButton" Text="Export PDF" Clicked="OnExportRingPdfClicked" />
+                <Button x:Name="PrintRingButton" Text="Print" Clicked="OnPrintRingClicked" />
+                <Button x:Name="ExportRingDxfButton" Text="Export DXF" Clicked="OnExportRingDxfClicked" />
+            </HorizontalStackLayout>
+             
             <Label x:Name="RingResultLabel" Text="Results will appear here" />
+            <Label Text="Preview" FontAttributes="Bold" />
+            <BoxView Color="LightGray" HeightRequest="420" CornerRadius="10" />
+            <Label Text="[Preview rendering requires SkiaSharp.Views.Maui.Controls support for .NET 10]" TextColor="Gray" FontSize="12" />
         </VerticalStackLayout>
     </ScrollView>
 

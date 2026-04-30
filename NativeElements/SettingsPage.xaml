@@ -13,7 +13,7 @@
         <VerticalStackLayout Padding="20" Spacing="15">
             <Label Text="Application Settings" FontSize="20" FontAttributes="Bold" />
 
-            <Label Text="DPI (affects rendering & export)" />
+            <Label Text="DPI (affects rendering &amp; export)" />
             <Entry Text="{Binding Dpi}" Keyboard="Numeric" />
 
             <Label Text="Page Size" />

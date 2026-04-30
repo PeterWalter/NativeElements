@@ -20,10 +20,17 @@
             <Label Text="Seam Allowance (cm)" FontSize="14" />
             <Entry x:Name="SeamEntry" Text="0.5" Keyboard="Numeric" />
             
-            <Button x:Name="CalculateButton" Text="Calculate" Clicked="OnCalculateClicked" />
-            <Button x:Name="ExportDxfButton" Text="Export DXF" Clicked="OnExportDxfClicked" />
-            
+            <HorizontalStackLayout Spacing="10">
+                <Button x:Name="CalculateButton" Text="Calculate" Clicked="OnCalculateClicked" />
+                <Button x:Name="ExportPdfButton" Text="Export PDF" Clicked="OnExportPdfClicked" />
+                <Button x:Name="PrintButton" Text="Print" Clicked="OnPrintClicked" />
+                <Button x:Name="ExportDxfButton" Text="Export DXF" Clicked="OnExportDxfClicked" />
+            </HorizontalStackLayout>
+             
             <Label x:Name="ResultLabel" Text="Results will appear here" />
+            <Label Text="Preview" FontAttributes="Bold" />
+            <BoxView Color="LightGray" HeightRequest="420" CornerRadius="10" />
+            <Label Text="[Preview rendering requires SkiaSharp.Views.Maui.Controls support for .NET 10]" TextColor="Gray" FontSize="12" />
         </VerticalStackLayout>
     </ScrollView>
 

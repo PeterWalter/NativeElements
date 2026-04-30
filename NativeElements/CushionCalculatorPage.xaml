@@ -10,45 +10,64 @@
     </ContentPage.BindingContext>
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="10">
-            <Label Text="Cushion Calculator" FontSize="20" FontAttributes="Bold" />
+        <Grid Padding="20">
+            <VerticalStackLayout MaximumWidthRequest="960"
+                                 HorizontalOptions="Center"
+                                 Spacing="12">
+                <Label Text="Cushion Calculator" FontSize="22" FontAttributes="Bold" />
 
-            <Label Text="Type (Throw/Back/Seat)" />
-            <Entry Text="{Binding CushionType}" />
+                <Grid ColumnDefinitions="220,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10">
+                    <Label Grid.Row="0" Grid.Column="0" Text="Type" VerticalTextAlignment="Center" />
+                    <Picker Grid.Row="0" Grid.Column="1" SelectedItem="{Binding CushionType}">
+                        <Picker.Items>
+                            <x:String>Throw</x:String>
+                            <x:String>Back</x:String>
+                            <x:String>Seat</x:String>
+                        </Picker.Items>
+                    </Picker>
 
-            <Label Text="Finished Width (cm)" />
-            <Entry Text="{Binding WidthCm}" Keyboard="Numeric" />
+                    <Label Grid.Row="1" Grid.Column="0" Text="Finished Width (cm)" VerticalTextAlignment="Center" />
+                    <Entry Grid.Row="1" Grid.Column="1" Text="{Binding WidthCm}" Keyboard="Numeric" />
 
-            <Label Text="Finished Depth (cm)" />
-            <Entry Text="{Binding DepthCm}" Keyboard="Numeric" />
+                    <Label Grid.Row="2" Grid.Column="0" Text="Finished Depth (cm)" VerticalTextAlignment="Center" />
+                    <Entry Grid.Row="2" Grid.Column="1" Text="{Binding DepthCm}" Keyboard="Numeric" />
 
-            <Label Text="Boxed Height (cm)" />
-            <Entry Text="{Binding BoxedHeightCm}" Keyboard="Numeric" />
+                    <Label Grid.Row="3" Grid.Column="0" Text="Boxed Height (cm)" VerticalTextAlignment="Center" />
+                    <Entry Grid.Row="3" Grid.Column="1" Text="{Binding BoxedHeightCm}" Keyboard="Numeric" />
 
-            <Label Text="Seam Allowance (cm)" />
-            <Entry Text="{Binding SeamAllowanceCm}" Keyboard="Numeric" />
+                    <Label Grid.Row="4" Grid.Column="0" Text="Seam Allowance (cm)" VerticalTextAlignment="Center" />
+                    <Entry Grid.Row="4" Grid.Column="1" Text="{Binding SeamAllowanceCm}" Keyboard="Numeric" />
 
-            <Label Text="Shrinkage (decimal e.g. 0.05)" />
-            <Entry Text="{Binding ShrinkageFactor}" Keyboard="Numeric" />
+                    <Label Grid.Row="5" Grid.Column="0" Text="Shrinkage (e.g. 0.05)" VerticalTextAlignment="Center" />
+                    <Entry Grid.Row="5" Grid.Column="1" Text="{Binding ShrinkageFactor}" Keyboard="Numeric" />
 
-            <HorizontalStackLayout Spacing="10">
-                <Label Text="Piping" VerticalOptions="Center" />
-                <Switch IsToggled="{Binding HasPiping}" />
-                <Label Text="Inner Lining" VerticalOptions="Center" />
-                <Switch IsToggled="{Binding HasInnerLining}" />
-            </HorizontalStackLayout>
+                    <Label Grid.Row="6" Grid.Column="0" Text="Quantity" VerticalTextAlignment="Center" />
+                    <Entry Grid.Row="6" Grid.Column="1" Text="{Binding Quantity}" Keyboard="Numeric" />
+                </Grid>
 
-            <Label Text="Quantity" />
-            <Entry Text="{Binding Quantity}" Keyboard="Numeric" />
+                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
+                    <Label Grid.Column="0" Text="Piping" VerticalOptions="Center" />
+                    <Switch Grid.Column="1" IsToggled="{Binding HasPiping}" />
+                    <Label Grid.Column="2" Text="Inner Lining" VerticalOptions="Center" />
+                    <Switch Grid.Column="3" IsToggled="{Binding HasInnerLining}" />
+                </Grid>
 
-            <Button Text="Calculate" Command="{Binding CalculateCommand}" />
-            <Button Text="Preview" Clicked="OnPreviewClicked" />
-            <Button Text="Export PDF" Clicked="OnExportClicked" />
-            <Button Text="Export DXF" Clicked="OnExportDxfClicked" />
+                <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Center">
+                    <Button Margin="0,0,10,10" Text="Calculate" Clicked="OnCalculateAndPreviewClicked" />
+                    <Button Margin="0,0,10,10" Text="Preview" Clicked="OnPreviewClicked" />
+                    <Button Margin="0,0,10,10" Text="Export PDF" Clicked="OnExportClicked" />
+                    <Button Margin="0,0,10,10" Text="Print" Clicked="OnPrintClicked" />
+                    <Button Margin="0,0,10,10" Text="Export DXF" Clicked="OnExportDxfClicked" />
+                </FlexLayout>
 
-            <Label Text="Results" FontAttributes="Bold" />
-            <Label Text="{Binding ResultText}" LineBreakMode="WordWrap" />
-        </VerticalStackLayout>
+                <Label Text="Results" FontAttributes="Bold" />
+                <Label Text="{Binding ResultText}" LineBreakMode="WordWrap" />
+
+                <Label Text="Preview" FontAttributes="Bold" />
+                <BoxView Color="LightGray" HeightRequest="500" CornerRadius="10" />
+                <Label Text="[Preview rendering requires SkiaSharp.Views.Maui.Controls support for .NET 10]" TextColor="Gray" FontSize="12" />
+            </VerticalStackLayout>
+        </Grid>
     </ScrollView>
 
 </ContentPage>

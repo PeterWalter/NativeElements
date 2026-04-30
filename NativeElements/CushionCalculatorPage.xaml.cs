@@ -1,5 +1,9 @@
 using NativeElements.ViewModels;
 using NativeElements.Models;
+using NativeElements.Services;
+using CommunityToolkit.Mvvm.Input;
+using SkiaSharp;
+using Microsoft.Maui.ApplicationModel;
 
 namespace NativeElements;
 
@@ -10,12 +14,49 @@ public partial class CushionCalculatorPage : ContentPage
         InitializeComponent();
     }
 
+    private CushionInput? _lastCushionInput;
     private CushionOutput? _lastCushionOutput;
 
-    private async void OnPreviewClicked(object? sender, EventArgs e)
+    private async void OnCalculateAndPreviewClicked(object? sender, EventArgs e)
     {
-        if (BindingContext is ViewModels.CushionViewModel vm)
+        try
         {
+            if (BindingContext is not CushionViewModel vm)
+            {
+                await DisplayAlertAsync("Error", "Unable to access CushionViewModel.", "OK");
+                return;
+            }
+
+            if (vm.CalculateCommand is IAsyncRelayCommand asyncCommand)
+            {
+                await asyncCommand.ExecuteAsync(null);
+            }
+            else if (vm.CalculateCommand.CanExecute(null))
+            {
+                vm.CalculateCommand.Execute(null);
+            }
+
+            OnPreviewClicked(sender, e);
+        }
+        catch (Exception ex)
+        {
+            if (BindingContext is CushionViewModel vm)
+            {
+                vm.ResultText = $"Error: {ex.Message}";
+            }
+            await DisplayAlertAsync("Calculation Error", ex.Message, "OK");
+        }
+    }
+
+    private void OnPreviewClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (BindingContext is not ViewModels.CushionViewModel vm)
+            {
+                return;
+            }
+
             var input = new CushionInput
             {
                 CushionType = vm.CushionType,
@@ -28,6 +69,7 @@ public partial class CushionCalculatorPage : ContentPage
                 HasInnerLining = vm.HasInnerLining,
                 Quantity = vm.Quantity
             };
+            _lastCushionInput = input;
 
             // Calculate output for preview
             switch (input.CushionType?.ToLowerInvariant())
@@ -45,16 +87,14 @@ public partial class CushionCalculatorPage : ContentPage
                     _lastCushionOutput = CushionMathService.CalculateThrownCushion(input);
                     break;
             }
-
-            var page = new CushionPreviewPage(input);
-            var nav = Application.Current?.MainPage?.Navigation;
-            if (nav != null)
+            // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
+            // CushionCanvas?.InvalidateSurface();
+        }
+        catch (Exception ex)
+        {
+            if (BindingContext is CushionViewModel vm)
             {
-                await nav.PushAsync(page);
-            }
-            else
-            {
-                await Shell.Current.GoToAsync("/" );
+                vm.ResultText = $"Preview error: {ex.Message}";
             }
         }
     }
@@ -94,6 +134,9 @@ public partial class CushionCalculatorPage : ContentPage
             }
 
             _lastCushionOutput = output;
+            _lastCushionInput = input;
+            // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
+            // CushionCanvas?.InvalidateSurface();
 
             try
             {
@@ -109,5 +152,44 @@ public partial class CushionCalculatorPage : ContentPage
             }
         }
     }
+
+    private async void OnPrintClicked(object? sender, EventArgs e)
+    {
+        if (BindingContext is not CushionViewModel vm)
+        {
+            await DisplayAlertAsync("Error", "Unable to access CushionViewModel.", "OK");
+            return;
+        }
+
+        if (_lastCushionOutput == null)
+        {
+            OnPreviewClicked(sender, e);
+        }
+
+        if (_lastCushionOutput == null)
+        {
+            await DisplayAlertAsync("Error", "Please calculate/preview before printing.", "OK");
+            return;
+        }
+
+        try
+        {
+            string fileName = $"cushion_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
+            var path = await PdfExportService.ExportCushionToPdfAsync(_lastCushionOutput, fileName, 300);
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "Print Cushion Design",
+                File = new ShareFile(path)
+            });
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Print Failed", ex.Message, "OK");
+        }
+    }
+
+    // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
+    private void OnCushionCanvasPaintSurface(object? sender, object e) { }
 }
+
 

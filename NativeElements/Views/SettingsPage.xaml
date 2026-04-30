@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NativeElements.Views.SettingsPage"
+             Title="Settings">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <Label Text="Application Settings" FontSize="24" FontAttributes="Bold" />
+
+            <Label Text="DPI (Dots Per Inch)" FontSize="14" FontAttributes="Bold" />
+            <Entry x:Name="DpiEntry" Text="300" Keyboard="Numeric" Placeholder="Enter DPI value" />
+            
+            <Label Text="Page Size" FontSize="14" FontAttributes="Bold" />
+            <Picker x:Name="PageSizePicker" Title="Select page size">
+                <Picker.Items>
+                    <x:String>A4 (210x297mm)</x:String>
+                    <x:String>Letter (8.5x11in)</x:String>
+                    <x:String>A3 (297x420mm)</x:String>
+                </Picker.Items>
+            </Picker>
+
+            <Label Text="Scale Factor" FontSize="14" FontAttributes="Bold" />
+            <Entry x:Name="ScaleFactorEntry" Text="1.0" Keyboard="Numeric" Placeholder="Enter scale factor" />
+
+            <Label Text="Grid Settings" FontSize="14" FontAttributes="Bold" />
+            
+            <CheckBox x:Name="GridEnabledCheckBox" IsChecked="True" />
+            <Label Text="Show Grid Overlay" FontSize="12" />
+
+            <Label Text="Grid Size (cm)" FontSize="12" />
+            <Entry x:Name="GridSizeEntry" Text="1.0" Keyboard="Numeric" Placeholder="Enter grid size in cm" />
+
+            <Button Text="Save Settings" Clicked="OnSaveSettingsClicked" />
+            <Button Text="Reset to Defaults" Clicked="OnResetClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -1,36 +1,80 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="NativeElements.MainPage">
+<TabbedPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            x:Class="NativeElements.MainPage"
+            Title="NativeElements">
 
-    <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25">
-            <Image
-                Source="dotnet_bot.png"
-                HeightRequest="185"
-                Aspect="AspectFit"
-                SemanticProperties.Description="dot net bot in a submarine number ten" />
+    <ContentPage Title="Petal Template">
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="15">
+                <Label Text="Petal Template Generator" FontSize="24" FontAttributes="Bold" />
+                
+                <Label Text="Sphere Diameter (cm)" FontSize="14" />
+                <Entry x:Name="DiameterEntry" Text="10" Keyboard="Numeric" />
+                
+                <Label Text="Number of Petals" FontSize="14" />
+                <Entry x:Name="PetalsEntry" Text="6" Keyboard="Numeric" />
+                
+                <Label Text="DPI" FontSize="14" />
+                <Entry x:Name="DpiEntry" Text="300" Keyboard="Numeric" />
+                
+                <Label Text="Seam Allowance (cm)" FontSize="14" />
+                <Entry x:Name="SeamEntry" Text="0.5" Keyboard="Numeric" />
+                
+                <Button x:Name="CalculateButton" Text="Calculate" Clicked="OnCalculateClicked" />
+                
+                <Label x:Name="ResultLabel" Text="Results will appear here" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </ContentPage>
 
-            <Label
-                Text="Hello, World!"
-                Style="{StaticResource Headline}"
-                SemanticProperties.HeadingLevel="Level1" />
+    <ContentPage Title="Segmented Ring">
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="15">
+                <Label Text="Segmented Ring Calculator" FontSize="24" FontAttributes="Bold" />
+                
+                <Label Text="Outer Radius (cm)" FontSize="14" />
+                <Entry x:Name="OuterRadiusEntry" Text="10" Keyboard="Numeric" />
+                
+                <Label Text="Inner Radius (cm)" FontSize="14" />
+                <Entry x:Name="InnerRadiusEntry" Text="5" Keyboard="Numeric" />
+                
+                <Label Text="Number of Segments" FontSize="14" />
+                <Entry x:Name="SegmentsEntry" Text="8" Keyboard="Numeric" />
+                
+                <Label Text="DPI" FontSize="14" />
+                <Entry x:Name="RingDpiEntry" Text="300" Keyboard="Numeric" />
+                
+                <Button x:Name="CalculateRingButton" Text="Calculate" Clicked="OnCalculateRingClicked" />
+                
+                <Label x:Name="RingResultLabel" Text="Results will appear here" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </ContentPage>
 
-            <Label
-                Text="Welcome to &#10;.NET Multi-platform App UI"
-                Style="{StaticResource SubHeadline}"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Welcome to dot net Multi platform App U I" />
-
-            <Button
-                x:Name="CounterBtn"
-                Text="Click me" 
-                SemanticProperties.Hint="Counts the number of times you click"
-                Clicked="OnCounterClicked"
-                HorizontalOptions="Fill" />
+    <ContentPage Title="History">
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <Label Text="Calculation History" FontSize="24" FontAttributes="Bold" />
+            
+            <HorizontalStackLayout Spacing="10">
+                <Button x:Name="RefreshButton" Text="Refresh" Clicked="OnRefreshHistoryClicked" HorizontalOptions="FillAndExpand" />
+                <Button x:Name="ClearButton" Text="Clear" Clicked="OnClearHistoryClicked" HorizontalOptions="FillAndExpand" />
+            </HorizontalStackLayout>
+            
+            <CollectionView x:Name="HistoryCollectionView" SelectionMode="Single" SelectionChangedCommand="{Binding SelectItemCommand}" SelectionChangedCommandParameter="{Binding SelectedItem, Source={RelativeSource Self}}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Padding="10" Margin="5" BorderColor="LightGray" HasShadow="True">
+                            <StackLayout Spacing="5">
+                                <Label Text="{Binding Type, StringFormat='Type: {0}'}" FontSize="12" FontAttributes="Bold" />
+                                <Label Text="{Binding Timestamp, StringFormat='Time: {0:yyyy-MM-dd HH:mm:ss}'}" FontSize="11" />
+                            </StackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
         </VerticalStackLayout>
-    </ScrollView>
+    </ContentPage>
 
-</ContentPage>
+</TabbedPage>
+
