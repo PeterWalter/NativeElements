@@ -6,9 +6,25 @@
     xmlns:local="clr-namespace:NativeElements"
     Title="NativeElements">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <Tab Title="Petal">
+            <ShellContent ContentTemplate="{DataTemplate local:PetalPage}" />
+        </Tab>
+        <Tab Title="Ring">
+            <ShellContent ContentTemplate="{DataTemplate local:SegmentedRingPage}" />
+        </Tab>
+        <Tab Title="Cushion">
+            <ShellContent ContentTemplate="{DataTemplate local:CushionCalculatorPage}" />
+        </Tab>
+        <Tab Title="History">
+            <ShellContent ContentTemplate="{DataTemplate local:HistoryPage}" />
+        </Tab>
+        <Tab Title="Tools">
+            <ShellContent ContentTemplate="{DataTemplate local:DeveloperPage}" />
+        </Tab>
+        <Tab Title="Settings">
+            <ShellContent ContentTemplate="{DataTemplate local:SettingsPage}" />
+        </Tab>
+    </TabBar>
 
 </Shell>

@@ -18,11 +18,16 @@ public partial class SegmentedRingPage : ContentPage
         {
             if (!double.TryParse(OuterRadiusEntry.Text, out double outer) ||
                 !double.TryParse(InnerRadiusEntry.Text, out double inner) ||
-                !int.TryParse(SegmentsEntry.Text, out int segments) ||
-                !double.TryParse(RingDpiEntry.Text, out double dpi))
+                !int.TryParse(SegmentsEntry.Text, out int segments))
             {
                 RingResultLabel.Text = "Please enter valid numbers";
                 return;
+            }
+
+            double dpi;
+            if (!double.TryParse(RingDpiEntry.Text, out dpi))
+            {
+                dpi = await Services.SettingsService.GetDpiAsync();
             }
 
             if (inner >= outer)

@@ -17,9 +17,19 @@ public partial class MainPage : TabbedPage
         try
         {
             if (!double.TryParse(DiameterEntry.Text, out double diameter) ||
-                !int.TryParse(PetalsEntry.Text, out int petals) ||
-                !double.TryParse(DpiEntry.Text, out double dpi) ||
-                !double.TryParse(SeamEntry.Text, out double seam))
+                !int.TryParse(PetalsEntry.Text, out int petals))
+            {
+                ResultLabel.Text = "Please enter valid numbers";
+                return;
+            }
+
+            double dpi;
+            if (!double.TryParse(DpiEntry.Text, out dpi))
+            {
+                dpi = await Services.SettingsService.GetDpiAsync();
+            }
+
+            if (!double.TryParse(SeamEntry.Text, out double seam))
             {
                 ResultLabel.Text = "Please enter valid numbers";
                 return;
