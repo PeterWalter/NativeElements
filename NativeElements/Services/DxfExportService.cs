@@ -211,5 +211,58 @@ EOF";
                 return path;
             });
         }
+
+        public static async Task<string> ExportCuttingLayoutToDxfAsync(NativeElements.Core.Models.CuttingLayoutOutput layout, string fileName)
+        {
+            return await Task.Run(() =>
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine(Header());
+                sb.AppendLine(BeginLayer("CUT", 1));
+                sb.AppendLine(BeginLayer("ANNOTATION", 7));
+
+                int textId = 0;
+                foreach (var piece in layout.Pieces)
+                {
+                    // For each piece, write LWPOLYLINE in mm (convert cm->mm)
+                    var pts = piece.Points ?? new List<(double X, double Y)>();
+                    if (pts.Count == 0)
+                    {
+                        // fallback rectangle if width/height provided
+                        double wmm = piece.WidthCm * 10.0;
+                        double hmm = piece.HeightCm * 10.0;
+                        pts = new List<(double X, double Y)> { (0,0), (wmm,0), (wmm,hmm), (0,hmm) };
+                    }
+
+                    sb.AppendLine("0");
+                    sb.AppendLine("LWPOLYLINE");
+                    sb.AppendLine("90\n" + pts.Count);
+                    sb.AppendLine("70\n1");
+                    sb.AppendLine("8\nCUT");
+                    foreach (var p in pts)
+                    {
+                        sb.AppendLine("10\n" + (p.X * 10.0).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        sb.AppendLine("20\n" + (p.Y * 10.0).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    }
+
+                    // Annotation: TEXT with piece name and quantity
+                    sb.AppendLine("0");
+                    sb.AppendLine("TEXT");
+                    sb.AppendLine("8\nANNOTATION");
+                    sb.AppendLine("10\n" + ((pts[0].X + pts[1].X) / 2.0 * 10.0).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    sb.AppendLine("20\n" + ((pts[0].Y + pts[2].Y) / 2.0 * 10.0).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    sb.AppendLine("40\n5.0");
+                    sb.AppendLine("1\n" + System.Security.SecurityElement.Escape($"{piece.Name} x{piece.Quantity}"));
+
+                    textId++;
+                }
+
+                sb.AppendLine(Footer());
+                var docs = FileSystem.AppDataDirectory;
+                var path = Path.Combine(docs, fileName + ".dxf");
+                File.WriteAllText(path, sb.ToString(), Encoding.ASCII);
+                return path;
+            });
+        }
     }
 }

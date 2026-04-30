@@ -97,8 +97,10 @@ public partial class CushionCalculatorPage : ContentPage
 
             try
             {
-                string fileName = $"Cushion_{DateTime.Now:yyyyMMdd_HHmmss}";
-                var path = await DxfExportService.ExportCushionToDxfAsync(output, fileName);
+                // Generate cutting pieces (top/bottom/boxing) and export them as DXF
+                var layout = NativeElements.Core.Services.CuttingLayoutService.GenerateBoxCushionLayout(input);
+                string fileName = $"Cushion_Pieces_{DateTime.Now:yyyyMMdd_HHmmss}";
+                var path = await DxfExportService.ExportCuttingLayoutToDxfAsync(layout, fileName);
                 await DisplayAlertAsync("Export", $"DXF exported: {path}", "OK");
             }
             catch (Exception ex)

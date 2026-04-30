@@ -1,4 +1,5 @@
 using NativeElements.Core.Models;
+using NativeElements.Models;
 using System;
 
 namespace NativeElements.Core.Services
@@ -6,7 +7,7 @@ namespace NativeElements.Core.Services
     public static class CuttingLayoutService
     {
         // Generate cutting pieces for a boxed cushion (top, bottom, boxing band)
-        public static CuttingLayoutOutput GenerateBoxCushionLayout(Models.CushionInput input)
+        public static CuttingLayoutOutput GenerateBoxCushionLayout(CushionInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
 
