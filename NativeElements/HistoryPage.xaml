@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NativeElements.HistoryPage"
+             Title="History">
+
+    <VerticalStackLayout Padding="20" Spacing="15">
+        <Label Text="Calculation History" FontSize="24" FontAttributes="Bold" />
+        
+        <HorizontalStackLayout Spacing="10">
+            <Button x:Name="RefreshButton" Text="Refresh" Clicked="OnRefreshHistoryClicked" HorizontalOptions="FillAndExpand" />
+            <Button x:Name="ClearButton" Text="Clear" Clicked="OnClearHistoryClicked" HorizontalOptions="FillAndExpand" />
+        </HorizontalStackLayout>
+        
+        <CollectionView x:Name="HistoryCollectionView" SelectionMode="Single">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Padding="10" Margin="5" BorderColor="LightGray" HasShadow="True">
+                        <StackLayout Spacing="5">
+                            <Label Text="{Binding Type, StringFormat='Type: {0}'}" FontSize="12" FontAttributes="Bold" />
+                            <Label Text="{Binding Timestamp, StringFormat='Time: {0:yyyy-MM-dd HH:mm:ss}'}" FontSize="11" />
+                        </StackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+</ContentPage>
