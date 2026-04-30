@@ -16,7 +16,14 @@
             <Label Text="DPI (affects rendering & export)" />
             <Entry Text="{Binding Dpi}" Keyboard="Numeric" />
 
-            <Button Text="Save" Command="{Binding SaveCommand}" />
+            <Label Text="Page Size" />
+            <Picker Title="Page Size" ItemsSource="{Binding PageSizes}" SelectedItem="{Binding PageSize}" />
+
+            <Label Text="Tile Overlap (cm)" />
+            <Entry Text="{Binding OverlapCm}" Keyboard="Numeric" />
+
+            <Button Text="Save" Command="{Binding SaveSettingsCommand}" />
+            <Button Text="Reset" Command="{Binding ResetSettingsCommand}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

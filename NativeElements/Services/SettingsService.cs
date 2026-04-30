@@ -29,5 +29,51 @@ namespace NativeElements.Services
                 await DatabaseService.InsertAsync(new AppSettings { Key = "DPI", Value = dpi.ToString(), DataType = "int" });
             }
         }
+
+        public static async Task<double> GetOverlapCmAsync()
+        {
+            await DatabaseService.Initialize();
+            var existing = (await DatabaseService.QueryAsync<AppSettings>("SELECT * FROM AppSettings WHERE Key = ?", "OverlapCm")).FirstOrDefault();
+            if (existing != null && double.TryParse(existing.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double v))
+                return v;
+            return 1.0; // default 1.0 cm
+        }
+
+        public static async Task SetOverlapCmAsync(double cm)
+        {
+            await DatabaseService.Initialize();
+            var existing = (await DatabaseService.QueryAsync<AppSettings>("SELECT * FROM AppSettings WHERE Key = ?", "OverlapCm")).FirstOrDefault();
+            if (existing != null)
+            {
+                existing.Value = cm.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                await DatabaseService.UpdateAsync(existing);
+            }
+            else
+            {
+                await DatabaseService.InsertAsync(new AppSettings { Key = "OverlapCm", Value = cm.ToString(System.Globalization.CultureInfo.InvariantCulture), DataType = "double" });
+            }
+        }
+
+        public static async Task<string> GetPageSizeAsync()
+        {
+            await DatabaseService.Initialize();
+            var existing = (await DatabaseService.QueryAsync<AppSettings>("SELECT * FROM AppSettings WHERE Key = ?", "PageSize")).FirstOrDefault();
+            return existing?.Value ?? "A4";
+        }
+
+        public static async Task SetPageSizeAsync(string pageSize)
+        {
+            await DatabaseService.Initialize();
+            var existing = (await DatabaseService.QueryAsync<AppSettings>("SELECT * FROM AppSettings WHERE Key = ?", "PageSize")).FirstOrDefault();
+            if (existing != null)
+            {
+                existing.Value = pageSize;
+                await DatabaseService.UpdateAsync(existing);
+            }
+            else
+            {
+                await DatabaseService.InsertAsync(new AppSettings { Key = "PageSize", Value = pageSize, DataType = "string" });
+            }
+        }
     }
 }

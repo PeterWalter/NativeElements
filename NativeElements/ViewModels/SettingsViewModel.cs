@@ -23,13 +23,21 @@ public partial class SettingsViewModel : ObservableObject
     private double gridSize = 1.0;
 
     [ObservableProperty]
+    private double overlapCm = 1.0;
+
+    [ObservableProperty]
     private bool isSaving = false;
 
     public SettingsViewModel()
     {
+        // prepare PageSizes
+        PageSizes = new System.Collections.ObjectModel.ObservableCollection<string> { "A4", "A3", "Letter" };
         // Load settings asynchronously without awaiting
         _ = LoadSettingsAsync();
     }
+
+    [ObservableProperty]
+    private System.Collections.ObjectModel.ObservableCollection<string> pageSizes;
 
     [RelayCommand]
     public async Task LoadSettingsAsync()
@@ -55,6 +63,10 @@ public partial class SettingsViewModel : ObservableObject
             var gridSizeSetting = await DatabaseService.QueryAsync<AppSettings>("SELECT * FROM app_settings WHERE Key = ?", "GridSize");
             if (gridSizeSetting.Count > 0 && double.TryParse(gridSizeSetting[0].Value, out double gridSizeValue))
                 GridSize = gridSizeValue;
+
+            var overlapSetting = await DatabaseService.QueryAsync<AppSettings>("SELECT * FROM app_settings WHERE Key = ?", "OverlapCm");
+            if (overlapSetting.Count > 0 && double.TryParse(overlapSetting[0].Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double overlapValue))
+                OverlapCm = overlapValue;
         }
         catch (Exception ex)
         {
@@ -69,18 +81,32 @@ public partial class SettingsViewModel : ObservableObject
         {
             IsSaving = true;
 
+            // Use SettingsService helpers for DPI, PageSize and Overlap
+            await Services.SettingsService.SetDpiAsync((int)Dpi);
+            await Services.SettingsService.SetPageSizeAsync(PageSize);
+            await Services.SettingsService.SetOverlapCmAsync(OverlapCm);
+
+            // Persist other settings
             var settings = new List<AppSettings>
             {
-                new AppSettings { Key = "DPI", Value = Dpi.ToString(), DataType = "double" },
-                new AppSettings { Key = "PageSize", Value = PageSize, DataType = "string" },
-                new AppSettings { Key = "ScaleFactor", Value = ScaleFactor.ToString(), DataType = "double" },
+                new AppSettings { Key = "ScaleFactor", Value = ScaleFactor.ToString(System.Globalization.CultureInfo.InvariantCulture), DataType = "double" },
                 new AppSettings { Key = "GridEnabled", Value = GridEnabled.ToString().ToLower(), DataType = "bool" },
-                new AppSettings { Key = "GridSize", Value = GridSize.ToString(), DataType = "double" }
+                new AppSettings { Key = "GridSize", Value = GridSize.ToString(System.Globalization.CultureInfo.InvariantCulture), DataType = "double" }
             };
 
             foreach (var setting in settings)
             {
-                await DatabaseService.UpdateAsync(setting);
+                // Try update, if no row exists, insert
+                var existing = (await DatabaseService.QueryAsync<AppSettings>("SELECT * FROM app_settings WHERE Key = ?", setting.Key)).FirstOrDefault();
+                if (existing != null)
+                {
+                    existing.Value = setting.Value;
+                    await DatabaseService.UpdateAsync(existing);
+                }
+                else
+                {
+                    await DatabaseService.InsertAsync(setting);
+                }
             }
         }
         catch (Exception ex)
