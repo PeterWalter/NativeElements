@@ -21,8 +21,29 @@ public partial class App : Application
             args.SetObserved();
         };
 
-        // Use AppShell for tabbed navigation
-        MainPage = new AppShell();
+        try
+        {
+            // Use AppShell for tabbed navigation
+            MainPage = new AppShell();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"AppShell creation failed: {ex}");
+            // Fallback to minimal page
+            MainPage = new ContentPage
+            {
+                Content = new VerticalStackLayout
+                {
+                    Padding = 20,
+                    Spacing = 10,
+                    Children =
+                    {
+                        new Label { Text = "NativeElements", FontSize = 24, FontAttributes = FontAttributes.Bold },
+                        new Label { Text = $"Error: {ex.Message}", FontSize = 12, LineBreakMode = LineBreakMode.WordWrap },
+                    }
+                }
+            };
+        }
         
         // Initialize database lazily on first use (not blocking)
         _ = Task.Run(async () => await DatabaseService.Initialize());
