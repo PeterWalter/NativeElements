@@ -9,12 +9,53 @@ public class PdfExportService
 
     public static async Task<string> ExportPetalToPdfAsync(PetalOutput petalData, string fileName, double dpi = 300)
     {
-        return await ExportPetalToPngAsync(petalData, fileName, dpi);
+        return await Task.Run(() =>
+        {
+            // Calculate 1:1 scale canvas size in pixels
+            // DPI / 2.54 converts DPI to pixels per cm
+            double pixelsPerCm = dpi / 2.54;
+            
+            // Add margins (1 cm on all sides)
+            double marginCm = 1.0;
+            int canvasWidth = (int)((petalData.PetalWidth + (2 * marginCm)) * pixelsPerCm);
+            int canvasHeight = (int)((petalData.PetalHeight + (2 * marginCm)) * pixelsPerCm);
+
+            var docsPath = FileSystem.AppDataDirectory;
+            var filePath = Path.Combine(docsPath, $"{fileName}.pdf");
+
+            using var stream = File.OpenWrite(filePath);
+            using var doc = SKDocument.CreatePdf(stream);
+            using var canvas = doc.BeginPage(canvasWidth, canvasHeight);
+            canvas.Clear(SKColors.White);
+            using var image = RenderService.RenderPetal(petalData, canvasWidth, canvasHeight, true);
+            canvas.DrawImage(image, 0, 0);
+            doc.EndPage();
+            doc.Close();
+
+            return filePath;
+        });
     }
 
     public static async Task<string> ExportRingToPdfAsync(SegmentedRingOutput ringData, string fileName, double dpi = 300)
     {
-        return await ExportRingToPngAsync(ringData, fileName, dpi);
+        return await Task.Run(() =>
+        {
+            int size = Math.Max(700, (int)(ringData.PixelsPerCm * Math.Max(10, ringData.RadialEdgeLength * 4)));
+
+            var docsPath = FileSystem.AppDataDirectory;
+            var filePath = Path.Combine(docsPath, $"{fileName}.pdf");
+
+            using var stream = File.OpenWrite(filePath);
+            using var doc = SKDocument.CreatePdf(stream);
+            using var canvas = doc.BeginPage(size, size);
+            canvas.Clear(SKColors.White);
+            using var image = RenderService.RenderSegmentedRing(ringData, size, size, true);
+            canvas.DrawImage(image, 0, 0);
+            doc.EndPage();
+            doc.Close();
+
+            return filePath;
+        });
     }
 
     public static async Task<string> ExportCushionToPdfAsync(CushionOutput cushionData, string fileName, double dpi = 300)
