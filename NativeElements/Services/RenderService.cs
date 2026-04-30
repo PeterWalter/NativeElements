@@ -59,15 +59,17 @@ public class RenderService
 
         if (petalData.CurvePoints.Count > 0)
         {
-            // Draw left curve with smooth interpolation
+            // Start at the top center point (first point in curve)
             var firstPoint = petalData.CurvePoints[0];
             path.MoveTo(
                 centerX + (float)firstPoint.X * scaleX,
                 centerY + (float)firstPoint.Y * scaleY
             );
 
-            // Draw left side with quadratic curves for smooth shape
-            for (int i = 1; i < petalData.CurvePoints.Count; i++)
+            // Draw RIGHT side of petal (positive X values)
+            // Go from center (X=0) to right edge, tracing the outline
+            int midPoint = petalData.CurvePoints.Count / 2;
+            for (int i = midPoint; i < petalData.CurvePoints.Count; i++)
             {
                 var point = petalData.CurvePoints[i];
                 path.LineTo(
@@ -76,7 +78,8 @@ public class RenderService
                 );
             }
 
-            // Draw right curve (mirror) with smooth interpolation
+            // Draw LEFT side of petal (negative X values) by going back through points in reverse
+            // This traces the left outline from bottom to top
             for (int i = petalData.CurvePoints.Count - 1; i >= 0; i--)
             {
                 var point = petalData.CurvePoints[i];
