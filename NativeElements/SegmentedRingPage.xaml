@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NativeElements.SegmentedRingPage"
+             Title="Segmented Ring">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <Label Text="Segmented Ring Calculator" FontSize="24" FontAttributes="Bold" />
+            
+            <Label Text="Outer Radius (cm)" FontSize="14" />
+            <Entry x:Name="OuterRadiusEntry" Text="10" Keyboard="Numeric" />
+            
+            <Label Text="Inner Radius (cm)" FontSize="14" />
+            <Entry x:Name="InnerRadiusEntry" Text="5" Keyboard="Numeric" />
+            
+            <Label Text="Number of Segments" FontSize="14" />
+            <Entry x:Name="SegmentsEntry" Text="8" Keyboard="Numeric" />
+            
+            <Label Text="DPI" FontSize="14" />
+            <Entry x:Name="RingDpiEntry" Text="300" Keyboard="Numeric" />
+            
+            <Button x:Name="CalculateRingButton" Text="Calculate" Clicked="OnCalculateRingClicked" />
+            <Button x:Name="ExportRingDxfButton" Text="Export DXF" Clicked="OnExportRingDxfClicked" />
+            
+            <Label x:Name="RingResultLabel" Text="Results will appear here" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

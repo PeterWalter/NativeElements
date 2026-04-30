@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:NativeElements.ViewModels"
+             x:Class="NativeElements.CushionCalculatorPage"
+             Title="Cushion">
+
+    <ContentPage.BindingContext>
+        <vm:CushionViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            <Label Text="Cushion Calculator" FontSize="20" FontAttributes="Bold" />
+
+            <Label Text="Type (Throw/Back/Seat)" />
+            <Entry Text="{Binding CushionType}" />
+
+            <Label Text="Finished Width (cm)" />
+            <Entry Text="{Binding WidthCm}" Keyboard="Numeric" />
+
+            <Label Text="Finished Depth (cm)" />
+            <Entry Text="{Binding DepthCm}" Keyboard="Numeric" />
+
+            <Label Text="Boxed Height (cm)" />
+            <Entry Text="{Binding BoxedHeightCm}" Keyboard="Numeric" />
+
+            <Label Text="Seam Allowance (cm)" />
+            <Entry Text="{Binding SeamAllowanceCm}" Keyboard="Numeric" />
+
+            <Label Text="Shrinkage (decimal e.g. 0.05)" />
+            <Entry Text="{Binding ShrinkageFactor}" Keyboard="Numeric" />
+
+            <HorizontalStackLayout Spacing="10">
+                <Label Text="Piping" VerticalOptions="Center" />
+                <Switch IsToggled="{Binding HasPiping}" />
+                <Label Text="Inner Lining" VerticalOptions="Center" />
+                <Switch IsToggled="{Binding HasInnerLining}" />
+            </HorizontalStackLayout>
+
+            <Label Text="Quantity" />
+            <Entry Text="{Binding Quantity}" Keyboard="Numeric" />
+
+            <Button Text="Calculate" Command="{Binding CalculateCommand}" />
+            <Button Text="Preview" Clicked="OnPreviewClicked" />
+            <Button Text="Export PDF" Clicked="OnExportClicked" />
+            <Button Text="Export DXF" Clicked="OnExportDxfClicked" />
+
+            <Label Text="Results" FontAttributes="Bold" />
+            <Label Text="{Binding ResultText}" LineBreakMode="WordWrap" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

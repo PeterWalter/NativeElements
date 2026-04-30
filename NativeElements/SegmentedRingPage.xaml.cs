@@ -12,6 +12,8 @@ public partial class SegmentedRingPage : ContentPage
         InitializeComponent();
     }
 
+    private SegmentedRingOutput? _lastRingOutput;
+
     private async void OnCalculateRingClicked(object? sender, EventArgs e)
     {
         try
@@ -45,6 +47,7 @@ public partial class SegmentedRingPage : ContentPage
             };
 
             var output = SegmentedRingMathService.CalculateSegment(input);
+            _lastRingOutput = output;
 
             // Show results immediately
             RingResultLabel.Text = $"Segment Angle: {output.SegmentAngle:F2}°\n" +
@@ -67,6 +70,26 @@ public partial class SegmentedRingPage : ContentPage
         catch (Exception ex)
         {
             RingResultLabel.Text = $"Error: {ex.Message}";
+        }
+    }
+
+    private async void OnExportRingDxfClicked(object? sender, EventArgs e)
+    {
+        if (_lastRingOutput == null)
+        {
+            RingResultLabel.Text = "Please calculate first before exporting.";
+            return;
+        }
+
+        try
+        {
+            string fileName = $"Ring_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var path = await DxfExportService.ExportSegmentedRingToDxfAsync(_lastRingOutput, fileName);
+            RingResultLabel.Text = $"DXF exported: {path}";
+        }
+        catch (Exception ex)
+        {
+            RingResultLabel.Text = $"Export error: {ex.Message}";
         }
     }
 }

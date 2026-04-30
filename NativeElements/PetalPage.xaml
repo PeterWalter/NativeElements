@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NativeElements.PetalPage"
+             Title="Petal Template">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <Label Text="Petal Template Generator" FontSize="24" FontAttributes="Bold" />
+            
+            <Label Text="Sphere Diameter (cm)" FontSize="14" />
+            <Entry x:Name="DiameterEntry" Text="10" Keyboard="Numeric" />
+            
+            <Label Text="Number of Petals" FontSize="14" />
+            <Entry x:Name="PetalsEntry" Text="6" Keyboard="Numeric" />
+            
+            <Label Text="DPI" FontSize="14" />
+            <Entry x:Name="DpiEntry" Text="300" Keyboard="Numeric" />
+            
+            <Label Text="Seam Allowance (cm)" FontSize="14" />
+            <Entry x:Name="SeamEntry" Text="0.5" Keyboard="Numeric" />
+            
+            <Button x:Name="CalculateButton" Text="Calculate" Clicked="OnCalculateClicked" />
+            <Button x:Name="ExportDxfButton" Text="Export DXF" Clicked="OnExportDxfClicked" />
+            
+            <Label x:Name="ResultLabel" Text="Results will appear here" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

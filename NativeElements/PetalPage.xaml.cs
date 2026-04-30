@@ -12,6 +12,8 @@ public partial class PetalPage : ContentPage
         InitializeComponent();
     }
 
+    private PetalOutput? _lastOutput;
+
     private async void OnCalculateClicked(object? sender, EventArgs e)
     {
         try
@@ -44,6 +46,7 @@ public partial class PetalPage : ContentPage
             };
 
             var output = PetalMathService.CalculatePetal(input);
+            _lastOutput = output;
 
             // Show results immediately
             ResultLabel.Text = $"Petal Width: {output.PetalWidth:F2} cm\n" +
@@ -65,6 +68,26 @@ public partial class PetalPage : ContentPage
         catch (Exception ex)
         {
             ResultLabel.Text = $"Error: {ex.Message}";
+        }
+    }
+
+    private async void OnExportDxfClicked(object? sender, EventArgs e)
+    {
+        if (_lastOutput == null)
+        {
+            ResultLabel.Text = "Please calculate first before exporting.";
+            return;
+        }
+
+        try
+        {
+            string fileName = $"Petal_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var path = await DxfExportService.ExportPetalToDxfAsync(_lastOutput, fileName);
+            ResultLabel.Text = $"DXF exported: {path}";
+        }
+        catch (Exception ex)
+        {
+            ResultLabel.Text = $"Export error: {ex.Message}";
         }
     }
 }
