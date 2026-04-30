@@ -59,17 +59,21 @@ public class RenderService
 
         if (petalData.CurvePoints.Count > 0)
         {
-            // Start at the top center point (first point in curve)
+            // Curve points range from X=-maxX to X=+maxX (centered at origin)
+            // To create a petal outline:
+            // 1. Trace the right side: go from bottom to top along positive X values
+            // 2. Trace the left side: go from top to bottom with mirrored negative X
+            // 3. Close to form a filled petal
+
+            // Start at top of right side (where X≈0, first point)
             var firstPoint = petalData.CurvePoints[0];
             path.MoveTo(
                 centerX + (float)firstPoint.X * scaleX,
                 centerY + (float)firstPoint.Y * scaleY
             );
 
-            // Draw RIGHT side of petal (positive X values)
-            // Go from center (X=0) to right edge, tracing the outline
-            int midPoint = petalData.CurvePoints.Count / 2;
-            for (int i = midPoint; i < petalData.CurvePoints.Count; i++)
+            // Trace RIGHT side (X=0 to X=maxX, going downward)
+            for (int i = 1; i < petalData.CurvePoints.Count; i++)
             {
                 var point = petalData.CurvePoints[i];
                 path.LineTo(
@@ -78,13 +82,14 @@ public class RenderService
                 );
             }
 
-            // Draw LEFT side of petal (negative X values) by going back through points in reverse
-            // This traces the left outline from bottom to top
+            // Trace LEFT side (mirror the path back: X=maxX to X=0 to X=-maxX, going upward)
             for (int i = petalData.CurvePoints.Count - 1; i >= 0; i--)
             {
                 var point = petalData.CurvePoints[i];
+                // Mirror X coordinate: if original X is +5, mirrored is -5
+                double mirrorX = -point.X;
                 path.LineTo(
-                    centerX - (float)point.X * scaleX,
+                    centerX + (float)mirrorX * scaleX,
                     centerY + (float)point.Y * scaleY
                 );
             }
