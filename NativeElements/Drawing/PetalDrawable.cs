@@ -75,16 +75,16 @@ public class PetalDrawable : IDrawable
         // ── Dimension lines ───────────────────────────────────────────────
         DrawDimensionLines(canvas, centerX, yOrigin, s);
 
-        // ── Seam allowance label ──────────────────────────────────────────
+        // ── Seam allowance label — LEFT side of outer curve ──────────────
         if (PetalData.SeamAllowance > 0)
         {
             canvas.FontSize  = 11;
             canvas.FontColor = Color.FromArgb("#FFA500");
-            // Label beside the widest outer point
             float outerWidestX = (float)(outerPts[50].X) * s;
             float outerWidestY = yOrigin + (float)(outerPts[50].Y) * s;
+            // Place on LEFT side so it does not clash with L label on right
             canvas.DrawString($"SA {PetalData.SeamAllowance:F1}cm",
-                centerX + outerWidestX + 5, outerWidestY, HorizontalAlignment.Left);
+                centerX - outerWidestX - 6, outerWidestY, HorizontalAlignment.Right);
         }
     }
 
@@ -128,13 +128,13 @@ public class PetalDrawable : IDrawable
         canvas.FontSize  = 12;
         canvas.FontColor = Color.FromArgb("#CC0000");
 
-        // "L = xx.x cm"  on the right of the vertical line, near centre
+        // "L = xx.x cm" — RIGHT side, above the horizontal line
         canvas.DrawString($"L = {data.ArcLength:F1} cm",
-            centerX + halfW + 8, midY - 18, HorizontalAlignment.Left);
+            centerX + halfW + 8, midY - 20, HorizontalAlignment.Left);
 
-        // "W = xx.x cm"  at the centre width line, just above it
+        // "W = xx.x cm" — centred, BELOW the horizontal line (avoids clash with L)
         canvas.DrawString($"W = {data.PetalWidth:F1} cm",
-            centerX, midY - 16, HorizontalAlignment.Center);
+            centerX, midY + 16, HorizontalAlignment.Center);
     }
 
     private static void DrawGrid(ICanvas canvas, RectF dirtyRect, float pixelsPerCm)

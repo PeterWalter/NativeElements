@@ -89,9 +89,11 @@ public class RenderService
 
             var saTextPaint = new SKPaint { Color = SKColor.Parse("#FFA500"), TextSize = 22, IsAntialias = true };
             int mid = petalData.SeamCurvePoints.Count / 2;
-            float lx = centerX + (float)petalData.SeamCurvePoints[mid].X * s + 6;
+            // Place SA label on LEFT side so it doesn't clash with L label on right
+            float lx = centerX - (float)petalData.SeamCurvePoints[mid].X * s - 8;
             float ly = yOrigin  + (float)petalData.SeamCurvePoints[mid].Y * s;
-            canvas.DrawText($"SA {petalData.SeamAllowance:F1}cm", lx, ly, saTextPaint);
+            string saText = $"SA {petalData.SeamAllowance:F1}cm";
+            canvas.DrawText(saText, lx - saTextPaint.MeasureText(saText), ly, saTextPaint);
         }
 
         // Draw sewing line — solid black
@@ -152,11 +154,12 @@ public class RenderService
         // Horizontal line at widest point (W)
         canvas.DrawLine(centerX - halfW, midY, centerX + halfW, midY, redPaint);
 
-        // "L = xx.x cm" — right of centre, at midpoint
-        canvas.DrawText($"L = {petalData.ArcLength:F1} cm", centerX + halfW + 10, midY, textPaint);
+        // "L = xx.x cm" — RIGHT side, above horizontal line
+        canvas.DrawText($"L = {petalData.ArcLength:F1} cm", centerX + halfW + 10, midY - 8, textPaint);
 
-        // "W = xx.x cm" — at the width line, centred
-        canvas.DrawText($"W = {petalData.PetalWidth:F1} cm", centerX - 50, midY - 8, textPaint);
+        // "W = xx.x cm" — BELOW the horizontal line, centred (avoids clash with L)
+        string wText = $"W = {petalData.PetalWidth:F1} cm";
+        canvas.DrawText(wText, centerX - textPaint.MeasureText(wText) / 2, midY + 30, textPaint);
     }
 
     private static void DrawSegmentedRing(SKCanvas canvas, SegmentedRingOutput ringData, int canvasWidth, int canvasHeight, float lineWidth = 2)
