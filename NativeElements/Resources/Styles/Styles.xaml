@@ -482,17 +482,12 @@
     </Style>
 
     <!-- Card containers -->
-    <Style x:Key="Card" TargetType="Border">
+    <Style x:Key="CardBorder" TargetType="Border">
         <Setter Property="BackgroundColor"  Value="{AppThemeBinding Light={StaticResource Card}, Dark={StaticResource CardDark}}" />
         <Setter Property="StrokeShape"      Value="RoundRectangle 14" />
         <Setter Property="Stroke"           Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
         <Setter Property="StrokeThickness"  Value="1" />
         <Setter Property="Padding"          Value="20" />
-        <Setter Property="Shadow">
-            <Setter.Value>
-                <Shadow Brush="#000000" Offset="0,3" Radius="10" Opacity="0.07" />
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <Style x:Key="ResultBorder" TargetType="Border">
@@ -509,11 +504,6 @@
         <Setter Property="Stroke"           Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
         <Setter Property="StrokeThickness"  Value="1" />
         <Setter Property="Padding"          Value="16" />
-        <Setter Property="Shadow">
-            <Setter.Value>
-                <Shadow Brush="#000000" Offset="0,3" Radius="10" Opacity="0.07" />
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <Style x:Key="InputContainer" TargetType="Border">
@@ -535,53 +525,48 @@
 
     <!-- Buttons -->
     <Style x:Key="PrimaryButton" TargetType="Button">
-        <Setter Property="BackgroundColor"   Value="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource BrandDark}}" />
-        <Setter Property="TextColor"         Value="White" />
-        <Setter Property="FontFamily"        Value="OpenSansSemibold" />
-        <Setter Property="FontSize"          Value="14" />
-        <Setter Property="CornerRadius"      Value="10" />
-        <Setter Property="Padding"           Value="22,12" />
+        <Setter Property="BackgroundColor"      Value="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource BrandDark}}" />
+        <Setter Property="TextColor"            Value="White" />
+        <Setter Property="FontFamily"           Value="OpenSansSemibold" />
+        <Setter Property="FontSize"             Value="14" />
+        <Setter Property="CornerRadius"         Value="10" />
+        <Setter Property="Padding"              Value="22,12" />
         <Setter Property="MinimumHeightRequest" Value="46" />
-        <Setter Property="BorderWidth"       Value="0" />
-        <Setter Property="Shadow">
-            <Setter.Value>
-                <Shadow Brush="#1E3A5F" Offset="0,3" Radius="8" Opacity="0.25" />
-            </Setter.Value>
-        </Setter>
+        <Setter Property="BorderWidth"          Value="0" />
     </Style>
 
     <Style x:Key="SecondaryButton" TargetType="Button">
-        <Setter Property="BackgroundColor"   Value="Transparent" />
-        <Setter Property="TextColor"         Value="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource BrandDark}}" />
-        <Setter Property="FontFamily"        Value="OpenSansSemibold" />
-        <Setter Property="FontSize"          Value="14" />
-        <Setter Property="CornerRadius"      Value="10" />
-        <Setter Property="Padding"           Value="20,12" />
+        <Setter Property="BackgroundColor"      Value="Transparent" />
+        <Setter Property="TextColor"            Value="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource BrandDark}}" />
+        <Setter Property="FontFamily"           Value="OpenSansSemibold" />
+        <Setter Property="FontSize"             Value="14" />
+        <Setter Property="CornerRadius"         Value="10" />
+        <Setter Property="Padding"              Value="20,12" />
         <Setter Property="MinimumHeightRequest" Value="46" />
-        <Setter Property="BorderColor"       Value="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource BrandDark}}" />
-        <Setter Property="BorderWidth"       Value="1.5" />
+        <Setter Property="BorderColor"          Value="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource BrandDark}}" />
+        <Setter Property="BorderWidth"          Value="1.5" />
     </Style>
 
     <Style x:Key="DangerButton" TargetType="Button">
-        <Setter Property="BackgroundColor"   Value="{StaticResource Error}" />
-        <Setter Property="TextColor"         Value="White" />
-        <Setter Property="FontFamily"        Value="OpenSansSemibold" />
-        <Setter Property="FontSize"          Value="14" />
-        <Setter Property="CornerRadius"      Value="10" />
-        <Setter Property="Padding"           Value="20,12" />
+        <Setter Property="BackgroundColor"      Value="{StaticResource Error}" />
+        <Setter Property="TextColor"            Value="White" />
+        <Setter Property="FontFamily"           Value="OpenSansSemibold" />
+        <Setter Property="FontSize"             Value="14" />
+        <Setter Property="CornerRadius"         Value="10" />
+        <Setter Property="Padding"              Value="20,12" />
         <Setter Property="MinimumHeightRequest" Value="46" />
-        <Setter Property="BorderWidth"       Value="0" />
+        <Setter Property="BorderWidth"          Value="0" />
     </Style>
 
     <Style x:Key="AccentButton" TargetType="Button">
-        <Setter Property="BackgroundColor"   Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}" />
-        <Setter Property="TextColor"         Value="White" />
-        <Setter Property="FontFamily"        Value="OpenSansSemibold" />
-        <Setter Property="FontSize"          Value="14" />
-        <Setter Property="CornerRadius"      Value="10" />
-        <Setter Property="Padding"           Value="22,12" />
+        <Setter Property="BackgroundColor"      Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}" />
+        <Setter Property="TextColor"            Value="White" />
+        <Setter Property="FontFamily"           Value="OpenSansSemibold" />
+        <Setter Property="FontSize"             Value="14" />
+        <Setter Property="CornerRadius"         Value="10" />
+        <Setter Property="Padding"              Value="22,12" />
         <Setter Property="MinimumHeightRequest" Value="46" />
-        <Setter Property="BorderWidth"       Value="0" />
+        <Setter Property="BorderWidth"          Value="0" />
     </Style>
 
 </ResourceDictionary>

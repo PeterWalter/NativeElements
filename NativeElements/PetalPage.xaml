@@ -14,7 +14,7 @@
             </VerticalStackLayout>
 
             <!-- Parameters Card -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="16">
                     <Label Text="PARAMETERS" Style="{StaticResource SectionTitle}" />
 

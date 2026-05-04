@@ -19,7 +19,7 @@
             </VerticalStackLayout>
 
             <!-- Parameters Card -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="16">
                     <Label Text="CUSHION DIMENSIONS" Style="{StaticResource SectionTitle}" />
 
@@ -123,8 +123,8 @@
 
             <!-- Results -->
             <Border Style="{StaticResource ResultBorder}">
-                <Label Text="{Binding ResultText}" Style="{StaticResource ResultText}"
-                       Placeholder="Results will appear here after calculating." />
+                <Label Text="{Binding ResultText, TargetNullValue='Enter parameters above and tap Calculate.'}"
+                       Style="{StaticResource ResultText}" />
             </Border>
 
             <!-- Preview -->
