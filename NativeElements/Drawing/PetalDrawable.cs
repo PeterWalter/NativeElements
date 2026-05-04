@@ -81,11 +81,46 @@ public class PetalDrawable : IDrawable
         path.Close();
         canvas.DrawPath(path);
 
+        // Draw seam allowance lines
+        DrawSeamAllowance(canvas, centerX, startY, finalPetalWidthPx, finalPetalHeightPx);
+
         // Draw center lines with dimensions
         DrawDimensionLines(canvas, centerX, startY, finalPetalHeightPx, finalPetalWidthPx);
 
         // Draw grid
         DrawGrid(canvas, dirtyRect, scale * fitScale);
+    }
+
+    private void DrawSeamAllowance(ICanvas canvas, float centerX, float startY, float widthPx, float heightPx)
+    {
+        if (PetalData?.SeamAllowance <= 0)
+            return;
+
+        float scale = (float)PetalData.PixelsPerCm;
+        float arcLengthPx = (float)PetalData.ArcLength * scale;
+        
+        // Calculate how much of the height is seam allowance
+        float seamAllowancePx = (float)PetalData.SeamAllowance * scale;
+
+        canvas.StrokeColor = Color.FromArgb("#FFA500");  // Orange
+        canvas.StrokeSize = 1;
+        canvas.StrokeDashPattern = new float[] { 4, 4 };
+
+        // Top seam allowance line (horizontal dashed line)
+        float topSeamY = startY + seamAllowancePx;
+        canvas.DrawLine(centerX - widthPx / 2, topSeamY, centerX + widthPx / 2, topSeamY);
+
+        // Bottom seam allowance line (horizontal dashed line)
+        float bottomSeamY = startY + heightPx - seamAllowancePx;
+        canvas.DrawLine(centerX - widthPx / 2, bottomSeamY, centerX + widthPx / 2, bottomSeamY);
+
+        canvas.StrokeDashPattern = null;
+
+        // Add seam allowance labels
+        canvas.FontSize = 10;
+        canvas.FontColor = Color.FromArgb("#FFA500");
+        string seamText = $"SA: {PetalData.SeamAllowance:F1}cm";
+        canvas.DrawString(seamText, centerX - widthPx / 2 - 40, topSeamY, HorizontalAlignment.Right);
     }
 
     private void DrawDimensionLines(ICanvas canvas, float centerX, float startY, float heightPx, float widthPx)
@@ -95,12 +130,14 @@ public class PetalDrawable : IDrawable
         canvas.StrokeDashPattern = new float[] { 2, 2 };
 
         float endY = startY + heightPx;
+        float midY = startY + heightPx / 2;
 
-        // Vertical center line (height)
+        // Vertical center line (height) - at the center horizontally
         canvas.DrawLine(centerX, startY, centerX, endY);
 
-        // Horizontal center line (width)
-        canvas.DrawLine(centerX - widthPx / 2, startY + heightPx / 2, centerX + widthPx / 2, startY + heightPx / 2);
+        // Horizontal center line (width) - at the vertical middle of petal
+        float halfWidth = widthPx / 2;
+        canvas.DrawLine(centerX - halfWidth, midY, centerX + halfWidth, midY);
 
         canvas.StrokeDashPattern = null;
 
@@ -108,12 +145,14 @@ public class PetalDrawable : IDrawable
         canvas.FontSize = 12;
         canvas.FontColor = Colors.Red;
 
-        // Height dimension
-        string heightText = $"H:{(heightPx / (float)118.11):F1}cm";
-        canvas.DrawString(heightText, centerX + 10, startY + heightPx / 2, HorizontalAlignment.Left);
+        // Height dimension - actual height value (from heightPx)
+        double heightCm = PetalData?.PetalHeight ?? 0;
+        string heightText = $"H: {heightCm:F1}cm";
+        canvas.DrawString(heightText, centerX + 15, midY, HorizontalAlignment.Left);
 
-        // Width dimension
-        string widthText = $"W:{(widthPx / (float)118.11):F1}cm";
+        // Width dimension - actual width value (from widthPx, which represents full width)
+        double widthCm = PetalData?.PetalWidth ?? 0;
+        string widthText = $"W: {widthCm:F1}cm";
         canvas.DrawString(widthText, centerX, startY - 15, HorizontalAlignment.Center);
     }
 

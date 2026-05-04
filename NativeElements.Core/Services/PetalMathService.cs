@@ -34,6 +34,7 @@ public class PetalMathService
             PetalWidth = petalWidth,
             ArcLength = arcLength,
             PetalHeight = petalHeight,
+            SeamAllowance = input.SeamAllowance,
             CurvePoints = curvePoints,
             PixelsPerCm = pixelsPerCm
         };

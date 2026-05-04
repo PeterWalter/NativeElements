@@ -105,8 +105,51 @@ public class RenderService
 
         canvas.DrawPath(path, paint);
 
+        // Draw seam allowance lines
+        DrawSeamAllowance(canvas, petalData, centerX, startY, fitScale);
+
         // Draw center lines with dimensions
         DrawPetalDimensions(canvas, petalData, centerX, startY, fitScale);
+    }
+
+    private static void DrawSeamAllowance(SKCanvas canvas, PetalOutput petalData, float centerX, float startY, float fitScale)
+    {
+        if (petalData.SeamAllowance <= 0)
+            return;
+
+        var seamPaint = new SKPaint
+        {
+            Color = SKColor.Parse("#FFA500"),  // Orange
+            StrokeWidth = 1,
+            IsStroke = true,
+            IsAntialias = true,
+            PathEffect = SKPathEffect.CreateDash(new[] { 4f, 4f }, 0)
+        };
+
+        float scale = (float)petalData.PixelsPerCm * fitScale;
+        float petalWidthPx = (float)petalData.PetalWidth * scale;
+        float petalHeightPx = (float)petalData.PetalHeight * scale;
+        float halfWidthPx = petalWidthPx / 2;
+        float seamAllowancePx = (float)petalData.SeamAllowance * scale;
+
+        // Top seam allowance line
+        float topSeamY = startY + seamAllowancePx;
+        canvas.DrawLine(centerX - halfWidthPx, topSeamY, centerX + halfWidthPx, topSeamY, seamPaint);
+
+        // Bottom seam allowance line
+        float bottomSeamY = startY + petalHeightPx - seamAllowancePx;
+        canvas.DrawLine(centerX - halfWidthPx, bottomSeamY, centerX + halfWidthPx, bottomSeamY, seamPaint);
+
+        // Seam allowance text label
+        var textPaint = new SKPaint
+        {
+            Color = SKColor.Parse("#FFA500"),
+            TextSize = 20,
+            IsAntialias = true
+        };
+
+        string seamText = $"SA: {petalData.SeamAllowance:F1}cm";
+        canvas.DrawText(seamText, centerX - halfWidthPx - 60, topSeamY + 5, textPaint);
     }
 
     private static void DrawPetalDimensions(SKCanvas canvas, PetalOutput petalData, float centerX, float startY, float fitScale)
@@ -127,20 +170,22 @@ public class RenderService
         };
 
         float scale = (float)petalData.PixelsPerCm * fitScale;
-        float petalWidthPx = (float)(petalData.PetalWidth / 2) * scale;
+        float petalWidthPx = (float)petalData.PetalWidth * scale;  // Full width
         float petalHeightPx = (float)petalData.PetalHeight * scale;
+        float halfWidthPx = petalWidthPx / 2;  // Half width for positioning
 
         // Vertical center line
         canvas.DrawLine(centerX, startY, centerX, startY + petalHeightPx, redPaint);
 
-        // Horizontal center line
-        canvas.DrawLine(centerX - petalWidthPx, startY + petalHeightPx / 2, centerX + petalWidthPx, startY + petalHeightPx / 2, redPaint);
+        // Horizontal center line (at vertical midpoint)
+        float midY = startY + petalHeightPx / 2;
+        canvas.DrawLine(centerX - halfWidthPx, midY, centerX + halfWidthPx, midY, redPaint);
 
         // Dimension labels
         string heightText = $"H: {petalData.PetalHeight:F1}cm";
         string widthText = $"W: {petalData.PetalWidth:F1}cm";
 
-        canvas.DrawText(heightText, centerX + 20, startY + petalHeightPx / 2 + 10, textPaint);
+        canvas.DrawText(heightText, centerX + 20, midY + 10, textPaint);
         canvas.DrawText(widthText, centerX - 40, startY - 10, textPaint);
     }
 
