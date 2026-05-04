@@ -29,6 +29,8 @@ public class PetalMathService
 
         return new PetalOutput
         {
+            SphereDiameter = input.SphereDiameter,
+            NumberOfPetals = input.NumberOfPetals,
             PetalWidth = petalWidth,
             ArcLength = arcLength,
             PetalHeight = petalHeight,

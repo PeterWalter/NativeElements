@@ -20,6 +20,11 @@ public class RenderService
 
         DrawPetalShape(canvas, petalData, canvasWidth, canvasHeight);
 
+        // Title at top of page
+        var titlePaint = new SKPaint { Color = SKColors.Black, TextSize = 32, IsAntialias = true };
+        string title = $"Ø {petalData.SphereDiameter:F0} cm  ·  {petalData.NumberOfPetals} petals";
+        canvas.DrawText(title, canvasWidth / 2f - titlePaint.MeasureText(title) / 2, 36, titlePaint);
+
         return surface.Snapshot();
     }
 

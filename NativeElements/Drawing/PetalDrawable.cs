@@ -51,6 +51,12 @@ public class PetalDrawable : IDrawable
         // ── Draw grid ───────────────────────────────────────────────────
         DrawGrid(canvas, dirtyRect, s);
 
+        // ── Title: Ball diameter ─────────────────────────────────────────
+        canvas.FontSize  = 14;
+        canvas.FontColor = Colors.Black;
+        string title = $"Ø {PetalData.SphereDiameter:F0} cm  ·  {PetalData.NumberOfPetals} petals";
+        canvas.DrawString(title, centerX, 10, HorizontalAlignment.Center);
+
         // ── Draw outer cut line (seam allowance boundary) — orange dashed ─
         if (PetalData.SeamCurvePoints.Count > 0 && PetalData.SeamAllowance > 0)
         {
