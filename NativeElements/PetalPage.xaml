@@ -29,8 +29,7 @@
              
             <Label x:Name="ResultLabel" Text="Results will appear here" />
             <Label Text="Preview" FontAttributes="Bold" />
-            <BoxView Color="LightGray" HeightRequest="420" CornerRadius="10" />
-            <Label Text="[Preview rendering requires SkiaSharp.Views.Maui.Controls support for .NET 10]" TextColor="Gray" FontSize="12" />
+            <GraphicsView x:Name="PetalPreview" HeightRequest="420" />
         </VerticalStackLayout>
     </ScrollView>
 

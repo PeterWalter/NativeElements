@@ -63,22 +63,35 @@ EOF";
                 sb.AppendLine(BeginLayer("SEAM", 3));
                 sb.AppendLine(BeginLayer("ANNOTATION", 7));
 
-                // Entities: LWPOLYLINE for curve points
-                if (output?.CurvePoints != null)
+                // Build full petal outline (both sides) from CurvePoints
+                if (output?.CurvePoints != null && output.CurvePoints.Count > 0)
                 {
-                    sb.AppendLine("0");
-                    sb.AppendLine("LWPOLYLINE");
-                    sb.AppendLine("90\n" + output.CurvePoints.Count);
-                    sb.AppendLine("70\n1"); // closed polyline flag? 1 = closed
-                    sb.AppendLine("8\nCUT");
+                    var outlinePoints = new List<(double X, double Y)>();
 
+                    // Add right side (forward)
                     foreach (var p in output.CurvePoints)
                     {
-                        // Convert cm -> mm
-                        double x = p.X * 10.0;
-                        double y = p.Y * 10.0;
-                        sb.AppendLine("10\n" + x.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                        sb.AppendLine("20\n" + y.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        outlinePoints.Add((p.X * 10.0, p.Y * 10.0)); // cm -> mm
+                    }
+
+                    // Add left side (backward, mirrored X)
+                    for (int i = output.CurvePoints.Count - 1; i >= 0; i--)
+                    {
+                        var p = output.CurvePoints[i];
+                        outlinePoints.Add((-p.X * 10.0, p.Y * 10.0)); // Mirror X, cm -> mm
+                    }
+
+                    // LWPOLYLINE for petal outline
+                    sb.AppendLine("0");
+                    sb.AppendLine("LWPOLYLINE");
+                    sb.AppendLine("90\n" + outlinePoints.Count);
+                    sb.AppendLine("70\n1"); // closed polyline
+                    sb.AppendLine("8\nCUT");
+
+                    foreach (var p in outlinePoints)
+                    {
+                        sb.AppendLine("10\n" + p.X.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        sb.AppendLine("20\n" + p.Y.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     }
                 }
 
@@ -109,12 +122,16 @@ EOF";
                 sb.AppendLine(BeginLayer("CUT", 1));
                 sb.AppendLine(BeginLayer("ANNOTATION", 7));
 
-                // Approximate segment polygon using radial edge and angles
-                // Output expected to provide radii and segment angle (cm)
-                double outerR = output.OuterRadius * 10.0; // cm -> mm
-                double innerR = output.InnerRadius * 10.0;
+                // Approximate segment polygon using chord lengths and segment angle.
+                // SegmentedRingOutput does not expose radii, so derive them:
+                // chord = 2 * R * sin(theta/2) => R = chord / (2 * sin(theta/2))
                 double angleDeg = output.SegmentAngle;
                 double angleRad = angleDeg * Math.PI / 180.0;
+                double sinHalf = Math.Sin(angleRad / 2.0);
+                if (Math.Abs(sinHalf) < 1e-9)
+                    throw new ArgumentException("Invalid segmented ring angle.");
+                double outerR = (output.OuterEdgeLength / (2.0 * sinHalf)) * 10.0; // cm -> mm
+                double innerR = (output.InnerEdgeLength / (2.0 * sinHalf)) * 10.0; // cm -> mm
 
                 // Build polygon points from inner to outer edges
                 var points = new List<(double X, double Y)>();

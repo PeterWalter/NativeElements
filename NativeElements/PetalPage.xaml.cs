@@ -1,6 +1,7 @@
 using NativeElements.Models;
 using NativeElements.Services;
 using NativeElements.Data;
+using NativeElements.Drawing;
 using System.Threading.Tasks;
 using SkiaSharp;
 using Microsoft.Maui.ApplicationModel;
@@ -10,9 +11,13 @@ namespace NativeElements;
 
 public partial class PetalPage : ContentPage
 {
+    private PetalDrawable? _petalDrawable;
+
     public PetalPage()
     {
         InitializeComponent();
+        _petalDrawable = new PetalDrawable();
+        PetalPreview.Drawable = _petalDrawable;
     }
 
     private PetalOutput? _lastOutput;
@@ -50,8 +55,13 @@ public partial class PetalPage : ContentPage
 
             var output = PetalMathService.CalculatePetal(input);
             _lastOutput = output;
-            // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
-            // PetalCanvas?.InvalidateSurface();
+
+            // Update drawable and refresh preview
+            if (_petalDrawable != null)
+            {
+                _petalDrawable.PetalData = output;
+                PetalPreview.Invalidate();
+            }
 
             // Show results immediately
             ResultLabel.Text = $"Petal Width: {output.PetalWidth:F2} cm\n" +
@@ -135,7 +145,4 @@ public partial class PetalPage : ContentPage
             ResultLabel.Text = $"Print error: {ex.Message}";
         }
     }
-
-    // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
-    // private void OnPetalCanvasPaintSurface(object? sender, SKPaintSurfaceEventArgs e) { }
 }

@@ -64,8 +64,7 @@
                 <Label Text="{Binding ResultText}" LineBreakMode="WordWrap" />
 
                 <Label Text="Preview" FontAttributes="Bold" />
-                <BoxView Color="LightGray" HeightRequest="500" CornerRadius="10" />
-                <Label Text="[Preview rendering requires SkiaSharp.Views.Maui.Controls support for .NET 10]" TextColor="Gray" FontSize="12" />
+                <GraphicsView x:Name="CushionPreview" HeightRequest="500" />
             </VerticalStackLayout>
         </Grid>
     </ScrollView>

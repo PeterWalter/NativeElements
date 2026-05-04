@@ -59,20 +59,21 @@ public class RenderService
 
         if (petalData.CurvePoints.Count > 0)
         {
-            // Curve points range from X=-maxX to X=+maxX (centered at origin)
-            // To create a petal outline:
-            // 1. Trace the right side: go from bottom to top along positive X values
-            // 2. Trace the left side: go from top to bottom with mirrored negative X
-            // 3. Close to form a filled petal
+            // CurvePoints are Y-parameterized right-side seam:
+            // X = half-width at that height, Y = height from 0 to arcLength
+            // Create symmetric petal by:
+            // 1. Trace top point (Y=0, X=0)
+            // 2. Trace right side (X positive, Y increasing)
+            // 3. Trace bottom point (Y=arcLength, X=0)
+            // 4. Trace left side (X negative, Y decreasing)
 
-            // Start at top of right side (where X≈0, first point)
             var firstPoint = petalData.CurvePoints[0];
             path.MoveTo(
                 centerX + (float)firstPoint.X * scaleX,
                 centerY + (float)firstPoint.Y * scaleY
             );
 
-            // Trace RIGHT side (X=0 to X=maxX, going downward)
+            // Trace right side (X=0 to X=max, Y from 0 to arcLength)
             for (int i = 1; i < petalData.CurvePoints.Count; i++)
             {
                 var point = petalData.CurvePoints[i];
@@ -82,14 +83,13 @@ public class RenderService
                 );
             }
 
-            // Trace LEFT side (mirror the path back: X=maxX to X=0 to X=-maxX, going upward)
+            // Trace left side (mirror back: X=-max to X=0, Y from arcLength to 0)
             for (int i = petalData.CurvePoints.Count - 1; i >= 0; i--)
             {
                 var point = petalData.CurvePoints[i];
-                // Mirror X coordinate: if original X is +5, mirrored is -5
-                double mirrorX = -point.X;
+                // Mirror X for left side
                 path.LineTo(
-                    centerX + (float)mirrorX * scaleX,
+                    centerX - (float)point.X * scaleX,
                     centerY + (float)point.Y * scaleY
                 );
             }

@@ -1,6 +1,7 @@
 using NativeElements.Models;
 using NativeElements.Services;
 using NativeElements.Data;
+using NativeElements.Drawing;
 using System.Threading.Tasks;
 using SkiaSharp;
 using Microsoft.Maui.ApplicationModel;
@@ -10,9 +11,13 @@ namespace NativeElements;
 
 public partial class SegmentedRingPage : ContentPage
 {
+    private RingDrawable? _ringDrawable;
+
     public SegmentedRingPage()
     {
         InitializeComponent();
+        _ringDrawable = new RingDrawable();
+        RingPreview.Drawable = _ringDrawable;
     }
 
     private SegmentedRingOutput? _lastRingOutput;
@@ -51,8 +56,13 @@ public partial class SegmentedRingPage : ContentPage
 
             var output = SegmentedRingMathService.CalculateSegment(input);
             _lastRingOutput = output;
-            // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
-            // RingCanvas?.InvalidateSurface();
+
+            // Update drawable and refresh preview
+            if (_ringDrawable != null)
+            {
+                _ringDrawable.RingData = output;
+                RingPreview.Invalidate();
+            }
 
             // Show results immediately
             RingResultLabel.Text = $"Segment Angle: {output.SegmentAngle:F2}°\n" +
@@ -137,8 +147,5 @@ public partial class SegmentedRingPage : ContentPage
             RingResultLabel.Text = $"Print error: {ex.Message}";
         }
     }
-
-    // Canvas rendering disabled - SkiaSharp.Views.Maui.Controls not available for .NET 10
-    private void OnRingCanvasPaintSurface(object? sender, object e) { }
 }
 
