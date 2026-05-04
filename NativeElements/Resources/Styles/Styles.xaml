@@ -421,7 +421,6 @@
     <Style TargetType="NavigationPage">
         <Setter Property="BarBackgroundColor" Value="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource CardDark}}" />
         <Setter Property="BarTextColor"       Value="White" />
-        <Setter Property="IconColor"          Value="White" />
     </Style>
 
     <Style TargetType="TabbedPage">
