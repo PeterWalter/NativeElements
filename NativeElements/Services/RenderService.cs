@@ -41,152 +41,117 @@ public class RenderService
 
     private static void DrawPetalShape(SKCanvas canvas, PetalOutput petalData, int canvasWidth, int canvasHeight, float lineWidth = 2)
     {
-        var paint = new SKPaint
+        float baseScale = (float)petalData.PixelsPerCm;
+
+        // Compute bounds from the outer (seam) curve so everything fits
+        var outerPts = petalData.SeamCurvePoints.Count > 0
+            ? petalData.SeamCurvePoints
+            : petalData.CurvePoints;
+
+        double maxX = 0, maxY = 0, minY = double.MaxValue;
+        foreach (var p in outerPts)
         {
-            Color = SKColors.Black,
-            StrokeWidth = lineWidth,
-            IsStroke = true,
-            IsAntialias = true
-        };
-
-        var path = new SKPath();
-
-        // Calculate petal bounds
-        double maxWidth = petalData.PetalWidth / 2;
-        double maxHeight = petalData.PetalHeight;
-
-        float petalWidthPx = (float)maxWidth * (float)petalData.PixelsPerCm;
-        float petalHeightPx = (float)maxHeight * (float)petalData.PixelsPerCm;
-
-        // Calculate padding (2cm on each side)
-        float padding = (float)(2 * petalData.PixelsPerCm);
-        float availableWidth = canvasWidth - 2 * padding;
-        float availableHeight = canvasHeight - 2 * padding;
-
-        // Fit petal to available space
-        float scaleX = availableWidth / petalWidthPx;
-        float scaleY = availableHeight / petalHeightPx;
-        float fitScale = Math.Min(scaleX, scaleY);
-
-        // Center the petal
-        float centerX = canvasWidth / 2f;
-        float startY = padding + (availableHeight - petalHeightPx * fitScale) / 2;
-
-        if (petalData.CurvePoints.Count > 0)
-        {
-            var firstPoint = petalData.CurvePoints[0];
-            path.MoveTo(
-                centerX + (float)firstPoint.X * (float)petalData.PixelsPerCm * fitScale,
-                startY + (float)firstPoint.Y * (float)petalData.PixelsPerCm * fitScale
-            );
-
-            // Trace right side
-            for (int i = 1; i < petalData.CurvePoints.Count; i++)
-            {
-                var point = petalData.CurvePoints[i];
-                path.LineTo(
-                    centerX + (float)point.X * (float)petalData.PixelsPerCm * fitScale,
-                    startY + (float)point.Y * (float)petalData.PixelsPerCm * fitScale
-                );
-            }
-
-            // Trace left side (mirror)
-            for (int i = petalData.CurvePoints.Count - 1; i >= 0; i--)
-            {
-                var point = petalData.CurvePoints[i];
-                path.LineTo(
-                    centerX - (float)point.X * (float)petalData.PixelsPerCm * fitScale,
-                    startY + (float)point.Y * (float)petalData.PixelsPerCm * fitScale
-                );
-            }
-
-            path.Close();
+            maxX = Math.Max(maxX, p.X);
+            maxY = Math.Max(maxY, p.Y);
+            minY = Math.Min(minY, p.Y);
         }
 
-        canvas.DrawPath(path, paint);
+        float outerWidthPx  = (float)(2 * maxX) * baseScale;
+        float outerHeightPx = (float)(maxY - minY) * baseScale;
 
-        // Draw seam allowance lines
-        DrawSeamAllowance(canvas, petalData, centerX, startY, fitScale);
+        float padding       = (float)(1.5 * baseScale); // 1.5 cm
+        float availableW    = canvasWidth  - 2 * padding;
+        float availableH    = canvasHeight - 2 * padding;
+        float fitScale      = Math.Min(availableW / outerWidthPx, availableH / outerHeightPx);
+        float s             = baseScale * fitScale;
 
-        // Draw center lines with dimensions
-        DrawPetalDimensions(canvas, petalData, centerX, startY, fitScale);
-    }
+        float centerX = canvasWidth  / 2f;
+        float yOrigin = padding + (availableH - outerHeightPx * fitScale) / 2 - (float)minY * s;
 
-    private static void DrawSeamAllowance(SKCanvas canvas, PetalOutput petalData, float centerX, float startY, float fitScale)
-    {
-        if (petalData.SeamAllowance <= 0)
-            return;
-
-        var seamPaint = new SKPaint
+        // Draw cut line (seam curve) — orange dashed
+        if (petalData.SeamCurvePoints.Count > 0 && petalData.SeamAllowance > 0)
         {
-            Color = SKColor.Parse("#FFA500"),  // Orange
-            StrokeWidth = 1,
-            IsStroke = true,
-            IsAntialias = true,
-            PathEffect = SKPathEffect.CreateDash(new[] { 4f, 4f }, 0)
-        };
+            var seamPaint = new SKPaint
+            {
+                Color       = SKColor.Parse("#FFA500"),
+                StrokeWidth = lineWidth * 0.8f,
+                IsStroke    = true,
+                IsAntialias = true,
+                PathEffect  = SKPathEffect.CreateDash(new[] { 8f, 6f }, 0)
+            };
+            var seamPath = BuildClosedPetalPath(petalData.SeamCurvePoints, centerX, yOrigin, s);
+            canvas.DrawPath(seamPath, seamPaint);
 
-        float scale = (float)petalData.PixelsPerCm * fitScale;
-        float petalWidthPx = (float)petalData.PetalWidth * scale;
-        float petalHeightPx = (float)petalData.PetalHeight * scale;
-        float halfWidthPx = petalWidthPx / 2;
-        float seamAllowancePx = (float)petalData.SeamAllowance * scale;
+            var saTextPaint = new SKPaint { Color = SKColor.Parse("#FFA500"), TextSize = 22, IsAntialias = true };
+            int mid = petalData.SeamCurvePoints.Count / 2;
+            float lx = centerX + (float)petalData.SeamCurvePoints[mid].X * s + 6;
+            float ly = yOrigin  + (float)petalData.SeamCurvePoints[mid].Y * s;
+            canvas.DrawText($"SA {petalData.SeamAllowance:F1}cm", lx, ly, saTextPaint);
+        }
 
-        // Top seam allowance line
-        float topSeamY = startY + seamAllowancePx;
-        canvas.DrawLine(centerX - halfWidthPx, topSeamY, centerX + halfWidthPx, topSeamY, seamPaint);
-
-        // Bottom seam allowance line
-        float bottomSeamY = startY + petalHeightPx - seamAllowancePx;
-        canvas.DrawLine(centerX - halfWidthPx, bottomSeamY, centerX + halfWidthPx, bottomSeamY, seamPaint);
-
-        // Seam allowance text label
-        var textPaint = new SKPaint
+        // Draw sewing line — solid black
+        var sewPaint = new SKPaint
         {
-            Color = SKColor.Parse("#FFA500"),
-            TextSize = 20,
+            Color       = SKColors.Black,
+            StrokeWidth = lineWidth,
+            IsStroke    = true,
             IsAntialias = true
         };
+        var sewPath = BuildClosedPetalPath(petalData.CurvePoints, centerX, yOrigin, s);
+        canvas.DrawPath(sewPath, sewPaint);
 
-        string seamText = $"SA: {petalData.SeamAllowance:F1}cm";
-        canvas.DrawText(seamText, centerX - halfWidthPx - 60, topSeamY + 5, textPaint);
+        // Draw dimension lines and labels
+        DrawPetalDimensions(canvas, petalData, centerX, yOrigin, s);
     }
 
-    private static void DrawPetalDimensions(SKCanvas canvas, PetalOutput petalData, float centerX, float startY, float fitScale)
+    private static SKPath BuildClosedPetalPath(
+        List<(double X, double Y)> pts, float centerX, float yOrigin, float s)
+    {
+        var path = new SKPath();
+        if (pts.Count == 0) return path;
+
+        path.MoveTo(centerX + (float)pts[0].X * s, yOrigin + (float)pts[0].Y * s);
+        for (int i = 1; i < pts.Count; i++)
+            path.LineTo(centerX + (float)pts[i].X * s, yOrigin + (float)pts[i].Y * s);
+        for (int i = pts.Count - 1; i >= 0; i--)
+            path.LineTo(centerX - (float)pts[i].X * s, yOrigin + (float)pts[i].Y * s);
+        path.Close();
+        return path;
+    }
+
+    private static void DrawPetalDimensions(SKCanvas canvas, PetalOutput petalData, float centerX, float yOrigin, float s)
     {
         var redPaint = new SKPaint
         {
-            Color = SKColors.Red,
-            StrokeWidth = 1,
-            IsStroke = true,
-            IsAntialias = true
+            Color       = SKColor.Parse("#CC0000"),
+            StrokeWidth = 1.5f,
+            IsStroke    = true,
+            IsAntialias = true,
+            PathEffect  = SKPathEffect.CreateDash(new[] { 6f, 4f }, 0)
         };
-
         var textPaint = new SKPaint
         {
-            Color = SKColors.Red,
-            TextSize = 24,
+            Color       = SKColor.Parse("#CC0000"),
+            TextSize    = 24,
             IsAntialias = true
         };
 
-        float scale = (float)petalData.PixelsPerCm * fitScale;
-        float petalWidthPx = (float)petalData.PetalWidth * scale;  // Full width
-        float petalHeightPx = (float)petalData.PetalHeight * scale;
-        float halfWidthPx = petalWidthPx / 2;  // Half width for positioning
+        float topY    = yOrigin;
+        float bottomY = yOrigin + (float)petalData.ArcLength * s;
+        float midY    = (topY + bottomY) / 2;
+        float halfW   = (float)(petalData.PetalWidth / 2) * s;
 
-        // Vertical center line
-        canvas.DrawLine(centerX, startY, centerX, startY + petalHeightPx, redPaint);
+        // Vertical centre line (L)
+        canvas.DrawLine(centerX, topY, centerX, bottomY, redPaint);
 
-        // Horizontal center line (at vertical midpoint)
-        float midY = startY + petalHeightPx / 2;
-        canvas.DrawLine(centerX - halfWidthPx, midY, centerX + halfWidthPx, midY, redPaint);
+        // Horizontal line at widest point (W)
+        canvas.DrawLine(centerX - halfW, midY, centerX + halfW, midY, redPaint);
 
-        // Dimension labels
-        string lengthText = $"Length: {petalData.PetalHeight:F1}cm";
-        string widthText = $"Width: {petalData.PetalWidth:F1}cm";
+        // "L = xx.x cm" — right of centre, at midpoint
+        canvas.DrawText($"L = {petalData.ArcLength:F1} cm", centerX + halfW + 10, midY, textPaint);
 
-        canvas.DrawText(lengthText, centerX + 30, midY - 10, textPaint);
-        canvas.DrawText(widthText, centerX - 40, startY - 10, textPaint);
+        // "W = xx.x cm" — above the petal
+        canvas.DrawText($"W = {petalData.PetalWidth:F1} cm", centerX - 50, topY - 12, textPaint);
     }
 
     private static void DrawSegmentedRing(SKCanvas canvas, SegmentedRingOutput ringData, int canvasWidth, int canvasHeight, float lineWidth = 2)

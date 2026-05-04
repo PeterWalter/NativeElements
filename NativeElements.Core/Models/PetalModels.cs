@@ -10,10 +10,11 @@ public class PetalInput
 
 public class PetalOutput
 {
-    public double PetalWidth { get; set; } // Width at widest point
-    public double ArcLength { get; set; }
-    public double PetalHeight { get; set; } // Total height
-    public double SeamAllowance { get; set; } // Seam allowance in cm
-    public List<(double X, double Y)> CurvePoints { get; set; } = new();
+    public double PetalWidth { get; set; }      // W = 2R·sin(π/n) — widest horizontal point
+    public double ArcLength { get; set; }       // L = π·R — sewing line length (pole to pole)
+    public double PetalHeight { get; set; }     // Same as ArcLength — used for rendering
+    public double SeamAllowance { get; set; }   // Seam allowance in cm (added outward on curved edges)
+    public List<(double X, double Y)> CurvePoints { get; set; } = new();      // Right-side sewing line
+    public List<(double X, double Y)> SeamCurvePoints { get; set; } = new();  // Right-side cut line (offset outward by SA)
     public double PixelsPerCm { get; set; }
 }
