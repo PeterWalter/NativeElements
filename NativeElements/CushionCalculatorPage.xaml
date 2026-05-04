@@ -10,63 +10,133 @@
     </ContentPage.BindingContext>
 
     <ScrollView>
-        <Grid Padding="20">
-            <VerticalStackLayout MaximumWidthRequest="960"
-                                 HorizontalOptions="Center"
-                                 Spacing="12">
-                <Label Text="Cushion Calculator" FontSize="22" FontAttributes="Bold" />
+        <VerticalStackLayout Padding="24,20,24,32" Spacing="16" MaximumWidthRequest="960" HorizontalOptions="Center">
 
-                <Grid ColumnDefinitions="220,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10">
-                    <Label Grid.Row="0" Grid.Column="0" Text="Type" VerticalTextAlignment="Center" />
-                    <Picker Grid.Row="0" Grid.Column="1" SelectedItem="{Binding CushionType}">
-                        <Picker.Items>
-                            <x:String>Throw</x:String>
-                            <x:String>Back</x:String>
-                            <x:String>Seat</x:String>
-                        </Picker.Items>
-                    </Picker>
-
-                    <Label Grid.Row="1" Grid.Column="0" Text="Finished Width (cm)" VerticalTextAlignment="Center" />
-                    <Entry Grid.Row="1" Grid.Column="1" Text="{Binding WidthCm}" Keyboard="Numeric" />
-
-                    <Label Grid.Row="2" Grid.Column="0" Text="Finished Depth (cm)" VerticalTextAlignment="Center" />
-                    <Entry Grid.Row="2" Grid.Column="1" Text="{Binding DepthCm}" Keyboard="Numeric" />
-
-                    <Label Grid.Row="3" Grid.Column="0" Text="Boxed Height (cm)" VerticalTextAlignment="Center" />
-                    <Entry Grid.Row="3" Grid.Column="1" Text="{Binding BoxedHeightCm}" Keyboard="Numeric" />
-
-                    <Label Grid.Row="4" Grid.Column="0" Text="Seam Allowance (cm)" VerticalTextAlignment="Center" />
-                    <Entry Grid.Row="4" Grid.Column="1" Text="{Binding SeamAllowanceCm}" Keyboard="Numeric" />
-
-                    <Label Grid.Row="5" Grid.Column="0" Text="Shrinkage (e.g. 0.05)" VerticalTextAlignment="Center" />
-                    <Entry Grid.Row="5" Grid.Column="1" Text="{Binding ShrinkageFactor}" Keyboard="Numeric" />
-
-                    <Label Grid.Row="6" Grid.Column="0" Text="Quantity" VerticalTextAlignment="Center" />
-                    <Entry Grid.Row="6" Grid.Column="1" Text="{Binding Quantity}" Keyboard="Numeric" />
-                </Grid>
-
-                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
-                    <Label Grid.Column="0" Text="Piping" VerticalOptions="Center" />
-                    <Switch Grid.Column="1" IsToggled="{Binding HasPiping}" />
-                    <Label Grid.Column="2" Text="Inner Lining" VerticalOptions="Center" />
-                    <Switch Grid.Column="3" IsToggled="{Binding HasInnerLining}" />
-                </Grid>
-
-                <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Center">
-                    <Button Margin="0,0,10,10" Text="Calculate" Clicked="OnCalculateAndPreviewClicked" />
-                    <Button Margin="0,0,10,10" Text="Preview" Clicked="OnPreviewClicked" />
-                    <Button Margin="0,0,10,10" Text="Export PDF" Clicked="OnExportClicked" />
-                    <Button Margin="0,0,10,10" Text="Print" Clicked="OnPrintClicked" />
-                    <Button Margin="0,0,10,10" Text="Export DXF" Clicked="OnExportDxfClicked" />
-                </FlexLayout>
-
-                <Label Text="Results" FontAttributes="Bold" />
-                <Label Text="{Binding ResultText}" LineBreakMode="WordWrap" />
-
-                <Label Text="Preview" FontAttributes="Bold" />
-                <GraphicsView x:Name="CushionPreview" HeightRequest="500" />
+            <!-- Page Header -->
+            <VerticalStackLayout Spacing="2" Margin="0,4,0,8">
+                <Label Text="Cushion Calculator" Style="{StaticResource PageTitle}" />
+                <Label Text="Calculate fabric requirements for boxed and throw cushions" Style="{StaticResource PageSubtitle}" />
             </VerticalStackLayout>
-        </Grid>
+
+            <!-- Parameters Card -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="CUSHION DIMENSIONS" Style="{StaticResource SectionTitle}" />
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+
+                        <!-- Type -->
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <Label Text="Cushion Type" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Picker SelectedItem="{Binding CushionType}">
+                                    <Picker.Items>
+                                        <x:String>Throw</x:String>
+                                        <x:String>Back</x:String>
+                                        <x:String>Seat</x:String>
+                                    </Picker.Items>
+                                </Picker>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Quantity -->
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                            <Label Text="Quantity" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry Text="{Binding Quantity}" Keyboard="Numeric" Placeholder="e.g. 1" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Width -->
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <Label Text="Finished Width (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry Text="{Binding WidthCm}" Keyboard="Numeric" Placeholder="e.g. 50" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Depth -->
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                            <Label Text="Finished Depth (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry Text="{Binding DepthCm}" Keyboard="Numeric" Placeholder="e.g. 50" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Boxed Height -->
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="0" Spacing="4">
+                            <Label Text="Boxed Height (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry Text="{Binding BoxedHeightCm}" Keyboard="Numeric" Placeholder="e.g. 10" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Seam Allowance -->
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
+                            <Label Text="Seam Allowance (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry Text="{Binding SeamAllowanceCm}" Keyboard="Numeric" Placeholder="e.g. 1.5" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Shrinkage -->
+                        <VerticalStackLayout Grid.Row="3" Grid.Column="0" Spacing="4">
+                            <Label Text="Shrinkage Factor" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry Text="{Binding ShrinkageFactor}" Keyboard="Numeric" Placeholder="e.g. 0.05" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                    </Grid>
+
+                    <!-- Toggle Options -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+                        <Border Grid.Column="0" Style="{StaticResource ToggleRow}">
+                            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Piping" VerticalOptions="Center"
+                                       FontFamily="OpenSansSemibold" FontSize="14"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding HasPiping}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource ToggleRow}">
+                            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Grid.Column="0" Text="Inner Lining" VerticalOptions="Center"
+                                       FontFamily="OpenSansSemibold" FontSize="14"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding HasInnerLining}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Action Buttons -->
+            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Center">
+                <Button Text="Calculate"   Clicked="OnCalculateAndPreviewClicked" Style="{StaticResource PrimaryButton}"   Margin="0,0,10,10" />
+                <Button Text="Preview"     Clicked="OnPreviewClicked"             Style="{StaticResource SecondaryButton}" Margin="0,0,10,10" />
+                <Button Text="Export PDF"  Clicked="OnExportClicked"             Style="{StaticResource SecondaryButton}" Margin="0,0,10,10" />
+                <Button Text="Print"       Clicked="OnPrintClicked"              Style="{StaticResource SecondaryButton}" Margin="0,0,10,10" />
+                <Button Text="Export DXF"  Clicked="OnExportDxfClicked"          Style="{StaticResource SecondaryButton}" Margin="0,0,0,10" />
+            </FlexLayout>
+
+            <!-- Results -->
+            <Border Style="{StaticResource ResultBorder}">
+                <Label Text="{Binding ResultText}" Style="{StaticResource ResultText}"
+                       Placeholder="Results will appear here after calculating." />
+            </Border>
+
+            <!-- Preview -->
+            <Border Style="{StaticResource PreviewBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="PREVIEW" Style="{StaticResource SectionTitle}" />
+                    <GraphicsView x:Name="CushionPreview" HeightRequest="500"
+                                  BackgroundColor="{AppThemeBinding Light={StaticResource Card}, Dark={StaticResource CardDark}}" />
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
     </ScrollView>
 
 </ContentPage>

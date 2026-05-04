@@ -2,34 +2,82 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="NativeElements.SegmentedRingPage"
-             Title="Segmented Ring">
+             Title="Ring">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
-            <Label Text="Segmented Ring Calculator" FontSize="24" FontAttributes="Bold" />
-            
-            <Label Text="Outer Radius (cm)" FontSize="14" />
-            <Entry x:Name="OuterRadiusEntry" Text="10" Keyboard="Numeric" />
-            
-            <Label Text="Inner Radius (cm)" FontSize="14" />
-            <Entry x:Name="InnerRadiusEntry" Text="5" Keyboard="Numeric" />
-            
-            <Label Text="Number of Segments" FontSize="14" />
-            <Entry x:Name="SegmentsEntry" Text="8" Keyboard="Numeric" />
-            
-            <Label Text="DPI" FontSize="14" />
-            <Entry x:Name="RingDpiEntry" Text="300" Keyboard="Numeric" />
-            
-            <HorizontalStackLayout Spacing="10">
-                <Button x:Name="CalculateRingButton" Text="Calculate" Clicked="OnCalculateRingClicked" />
-                <Button x:Name="ExportRingPdfButton" Text="Export PDF" Clicked="OnExportRingPdfClicked" />
-                <Button x:Name="PrintRingButton" Text="Print" Clicked="OnPrintRingClicked" />
-                <Button x:Name="ExportRingDxfButton" Text="Export DXF" Clicked="OnExportRingDxfClicked" />
-            </HorizontalStackLayout>
-             
-            <Label x:Name="RingResultLabel" Text="Results will appear here" />
-            <Label Text="Preview" FontAttributes="Bold" />
-            <GraphicsView x:Name="RingPreview" HeightRequest="420" />
+        <VerticalStackLayout Padding="24,20,24,32" Spacing="16" MaximumWidthRequest="900" HorizontalOptions="Center">
+
+            <!-- Page Header -->
+            <VerticalStackLayout Spacing="2" Margin="0,4,0,8">
+                <Label Text="Segmented Ring Calculator" Style="{StaticResource PageTitle}" />
+                <Label Text="Generate donut-shaped fabric ring cutting patterns" Style="{StaticResource PageSubtitle}" />
+            </VerticalStackLayout>
+
+            <!-- Parameters Card -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="PARAMETERS" Style="{StaticResource SectionTitle}" />
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+
+                        <!-- Outer Radius -->
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <Label Text="Outer Radius (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="OuterRadiusEntry" Text="10" Keyboard="Numeric" Placeholder="e.g. 15" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Inner Radius -->
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                            <Label Text="Inner Radius (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="InnerRadiusEntry" Text="5" Keyboard="Numeric" Placeholder="e.g. 5" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Segments -->
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <Label Text="Number of Segments" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="SegmentsEntry" Text="8" Keyboard="Numeric" Placeholder="e.g. 8" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- DPI -->
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                            <Label Text="Export DPI" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="RingDpiEntry" Text="300" Keyboard="Numeric" Placeholder="e.g. 300" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Action Buttons -->
+            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Center">
+                <Button x:Name="CalculateRingButton"  Text="Calculate"   Clicked="OnCalculateRingClicked"   Style="{StaticResource PrimaryButton}"   Margin="0,0,10,10" />
+                <Button x:Name="ExportRingPdfButton"  Text="Export PDF"  Clicked="OnExportRingPdfClicked"   Style="{StaticResource SecondaryButton}" Margin="0,0,10,10" />
+                <Button x:Name="PrintRingButton"      Text="Print"       Clicked="OnPrintRingClicked"       Style="{StaticResource SecondaryButton}" Margin="0,0,10,10" />
+                <Button x:Name="ExportRingDxfButton"  Text="Export DXF"  Clicked="OnExportRingDxfClicked"   Style="{StaticResource SecondaryButton}" Margin="0,0,0,10" />
+            </FlexLayout>
+
+            <!-- Results -->
+            <Border Style="{StaticResource ResultBorder}">
+                <Label x:Name="RingResultLabel" Text="Enter parameters above and tap Calculate." Style="{StaticResource ResultText}" />
+            </Border>
+
+            <!-- Preview -->
+            <Border Style="{StaticResource PreviewBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="PREVIEW" Style="{StaticResource SectionTitle}" />
+                    <GraphicsView x:Name="RingPreview" HeightRequest="460"
+                                  BackgroundColor="{AppThemeBinding Light={StaticResource Card}, Dark={StaticResource CardDark}}" />
+                </VerticalStackLayout>
+            </Border>
+
         </VerticalStackLayout>
     </ScrollView>
 

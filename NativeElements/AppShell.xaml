@@ -8,34 +8,22 @@
 
     <TabBar>
         <Tab Title="Petal">
-            <ShellContent>
-                <local:PetalPage />
-            </ShellContent>
+            <ShellContent ContentTemplate="{DataTemplate local:PetalPage}" />
         </Tab>
         <Tab Title="Ring">
-            <ShellContent>
-                <local:SegmentedRingPage />
-            </ShellContent>
+            <ShellContent ContentTemplate="{DataTemplate local:SegmentedRingPage}" />
         </Tab>
         <Tab Title="Cushion">
-            <ShellContent>
-                <local:CushionCalculatorPage />
-            </ShellContent>
+            <ShellContent ContentTemplate="{DataTemplate local:CushionCalculatorPage}" />
         </Tab>
         <Tab Title="History">
-            <ShellContent>
-                <local:HistoryPage />
-            </ShellContent>
+            <ShellContent ContentTemplate="{DataTemplate local:HistoryPage}" />
         </Tab>
         <Tab Title="Tools">
-            <ShellContent>
-                <local:DeveloperPage />
-            </ShellContent>
+            <ShellContent ContentTemplate="{DataTemplate local:DeveloperPage}" />
         </Tab>
         <Tab Title="Settings">
-            <ShellContent>
-                <local:SettingsPage />
-            </ShellContent>
+            <ShellContent ContentTemplate="{DataTemplate local:SettingsPage}" />
         </Tab>
     </TabBar>
 

@@ -1,15 +1,40 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="NativeElements.DeveloperPage"
              Title="Tools">
 
-    <VerticalStackLayout Padding="20" Spacing="15">
-        <Label Text="Developer Tools" FontSize="24" FontAttributes="Bold" />
-        <Button x:Name="RunTestsButton" Text="Run Cushion Unit Tests" Clicked="OnRunTestsClicked" />
-        <ScrollView HeightRequest="400">
-            <Label x:Name="TestOutputLabel" Text="Test output will appear here" LineBreakMode="WordWrap" />
-        </ScrollView>
+    <VerticalStackLayout Padding="24,20,24,32" Spacing="16" MaximumWidthRequest="900" HorizontalOptions="Center">
+
+        <!-- Page Header -->
+        <VerticalStackLayout Spacing="2" Margin="0,4,0,8">
+            <Label Text="Developer Tools" Style="{StaticResource PageTitle}" />
+            <Label Text="Internal diagnostics and unit test runner" Style="{StaticResource PageSubtitle}" />
+        </VerticalStackLayout>
+
+        <!-- Actions Card -->
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="TESTS" Style="{StaticResource SectionTitle}" />
+                <Button x:Name="RunTestsButton" Text="Run Cushion Unit Tests"
+                        Clicked="OnRunTestsClicked"
+                        Style="{StaticResource AccentButton}"
+                        HorizontalOptions="Start" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Output Card -->
+        <Border Style="{StaticResource PreviewBorder}" VerticalOptions="FillAndExpand">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="OUTPUT" Style="{StaticResource SectionTitle}" />
+                <ScrollView HeightRequest="420">
+                    <Label x:Name="TestOutputLabel"
+                           Text="Test output will appear here after running."
+                           Style="{StaticResource MonoText}" />
+                </ScrollView>
+            </VerticalStackLayout>
+        </Border>
+
     </VerticalStackLayout>
 
 </ContentPage>

@@ -1,28 +1,56 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="NativeElements.HistoryPage"
              Title="History">
 
-    <VerticalStackLayout Padding="20" Spacing="15">
-        <Label Text="Calculation History" FontSize="24" FontAttributes="Bold" />
-        
-        <HorizontalStackLayout Spacing="10">
-            <Button x:Name="RefreshButton" Text="Refresh" Clicked="OnRefreshHistoryClicked" HorizontalOptions="FillAndExpand" />
-            <Button x:Name="ClearButton" Text="Clear" Clicked="OnClearHistoryClicked" HorizontalOptions="FillAndExpand" />
-        </HorizontalStackLayout>
-        
-        <CollectionView x:Name="HistoryCollectionView" SelectionMode="Single">
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header bar -->
+        <VerticalStackLayout Grid.Row="0" Padding="24,20,24,12" Spacing="12">
+            <VerticalStackLayout Spacing="2">
+                <Label Text="Calculation History" Style="{StaticResource PageTitle}" />
+                <Label Text="Previously calculated results" Style="{StaticResource PageSubtitle}" />
+            </VerticalStackLayout>
+            <HorizontalStackLayout Spacing="10">
+                <Button x:Name="RefreshButton" Text="Refresh"   Clicked="OnRefreshHistoryClicked" Style="{StaticResource SecondaryButton}" />
+                <Button x:Name="ClearButton"   Text="Clear All" Clicked="OnClearHistoryClicked"   Style="{StaticResource DangerButton}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- History list -->
+        <CollectionView Grid.Row="1" x:Name="HistoryCollectionView" SelectionMode="Single"
+                        Margin="24,0,24,24">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Margin="0,60,0,0">
+                    <Label Text="No history yet" HorizontalTextAlignment="Center"
+                           FontFamily="OpenSansSemibold" FontSize="16"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                    <Label Text="Calculated results will appear here." HorizontalTextAlignment="Center"
+                           Style="{StaticResource PageSubtitle}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame Padding="10" Margin="5" BorderColor="LightGray" HasShadow="True">
-                        <StackLayout Spacing="5">
-                            <Label Text="{Binding Type, StringFormat='Type: {0}'}" FontSize="12" FontAttributes="Bold" />
-                            <Label Text="{Binding Timestamp, StringFormat='Time: {0:yyyy-MM-dd HH:mm:ss}'}" FontSize="11" />
-                        </StackLayout>
-                    </Frame>
+                    <Border Style="{StaticResource Card}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <BoxView Grid.Column="0" WidthRequest="4" CornerRadius="2"
+                                     Color="{AppThemeBinding Light={StaticResource Brand}, Dark={StaticResource BrandDark}}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="{Binding Type}" FontFamily="OpenSansSemibold" FontSize="15"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                <Label Text="{Binding Timestamp, StringFormat='{0:MMM d, yyyy  HH:mm}'}"
+                                       Style="{StaticResource FieldLabel}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-    </VerticalStackLayout>
-</ContentPage>
+
+    </Grid>
+
+</ContentPage>

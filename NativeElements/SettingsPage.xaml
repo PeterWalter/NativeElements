@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:NativeElements.ViewModels"
@@ -10,20 +10,49 @@
     </ContentPage.BindingContext>
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
-            <Label Text="Application Settings" FontSize="20" FontAttributes="Bold" />
+        <VerticalStackLayout Padding="24,20,24,32" Spacing="16" MaximumWidthRequest="700" HorizontalOptions="Center">
 
-            <Label Text="DPI (affects rendering &amp; export)" />
-            <Entry Text="{Binding Dpi}" Keyboard="Numeric" />
+            <!-- Page Header -->
+            <VerticalStackLayout Spacing="2" Margin="0,4,0,8">
+                <Label Text="Application Settings" Style="{StaticResource PageTitle}" />
+                <Label Text="Configure export quality and page layout preferences" Style="{StaticResource PageSubtitle}" />
+            </VerticalStackLayout>
 
-            <Label Text="Page Size" />
-            <Picker Title="Page Size" ItemsSource="{Binding PageSizes}" SelectedItem="{Binding PageSize}" />
+            <!-- Settings Card -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="RENDERING &amp; EXPORT" Style="{StaticResource SectionTitle}" />
 
-            <Label Text="Tile Overlap (cm)" />
-            <Entry Text="{Binding OverlapCm}" Keyboard="Numeric" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="DPI (affects rendering &amp; export quality)" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputContainer}">
+                            <Entry Text="{Binding Dpi}" Keyboard="Numeric" Placeholder="e.g. 300" />
+                        </Border>
+                    </VerticalStackLayout>
 
-            <Button Text="Save" Command="{Binding SaveSettingsCommand}" />
-            <Button Text="Reset" Command="{Binding ResetSettingsCommand}" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Page Size" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputContainer}">
+                            <Picker Title="Select page size" ItemsSource="{Binding PageSizes}" SelectedItem="{Binding PageSize}" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Tile Overlap (cm)" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputContainer}">
+                            <Entry Text="{Binding OverlapCm}" Keyboard="Numeric" Placeholder="e.g. 0.5" />
+                        </Border>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Action Buttons -->
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Save Settings" Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButton}" />
+                <Button Text="Reset to Defaults" Command="{Binding ResetSettingsCommand}" Style="{StaticResource SecondaryButton}" />
+            </HorizontalStackLayout>
+
         </VerticalStackLayout>
     </ScrollView>
+
 </ContentPage>

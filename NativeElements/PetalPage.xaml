@@ -2,34 +2,82 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="NativeElements.PetalPage"
-             Title="Petal Template">
+             Title="Petal">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
-            <Label Text="Petal Template Generator" FontSize="24" FontAttributes="Bold" />
-            
-            <Label Text="Sphere Diameter (cm)" FontSize="14" />
-            <Entry x:Name="DiameterEntry" Text="10" Keyboard="Numeric" />
-            
-            <Label Text="Number of Petals" FontSize="14" />
-            <Entry x:Name="PetalsEntry" Text="6" Keyboard="Numeric" />
-            
-            <Label Text="DPI" FontSize="14" />
-            <Entry x:Name="DpiEntry" Text="300" Keyboard="Numeric" />
-            
-            <Label Text="Seam Allowance (cm)" FontSize="14" />
-            <Entry x:Name="SeamEntry" Text="0.5" Keyboard="Numeric" />
-            
-            <HorizontalStackLayout Spacing="10">
-                <Button x:Name="CalculateButton" Text="Calculate" Clicked="OnCalculateClicked" />
-                <Button x:Name="ExportPdfButton" Text="Export PDF" Clicked="OnExportPdfClicked" />
-                <Button x:Name="PrintButton" Text="Print" Clicked="OnPrintClicked" />
-                <Button x:Name="ExportDxfButton" Text="Export DXF" Clicked="OnExportDxfClicked" />
-            </HorizontalStackLayout>
-             
-            <Label x:Name="ResultLabel" Text="Results will appear here" />
-            <Label Text="Preview" FontAttributes="Bold" />
-            <GraphicsView x:Name="PetalPreview" HeightRequest="420" />
+        <VerticalStackLayout Padding="24,20,24,32" Spacing="16" MaximumWidthRequest="900" HorizontalOptions="Center">
+
+            <!-- Page Header -->
+            <VerticalStackLayout Spacing="2" Margin="0,4,0,8">
+                <Label Text="Petal Template Generator" Style="{StaticResource PageTitle}" />
+                <Label Text="Calculate cutting patterns for sphere petal pieces" Style="{StaticResource PageSubtitle}" />
+            </VerticalStackLayout>
+
+            <!-- Parameters Card -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="PARAMETERS" Style="{StaticResource SectionTitle}" />
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+
+                        <!-- Sphere Diameter -->
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <Label Text="Sphere Diameter (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="DiameterEntry" Text="10" Keyboard="Numeric" Placeholder="e.g. 30" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Number of Petals -->
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                            <Label Text="Number of Petals" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="PetalsEntry" Text="6" Keyboard="Numeric" Placeholder="e.g. 6" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Seam Allowance -->
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <Label Text="Seam Allowance (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="SeamEntry" Text="0.5" Keyboard="Numeric" Placeholder="e.g. 1.0" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- DPI -->
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                            <Label Text="Export DPI" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="DpiEntry" Text="300" Keyboard="Numeric" Placeholder="e.g. 300" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Action Buttons -->
+            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Center">
+                <Button x:Name="CalculateButton"  Text="Calculate"   Clicked="OnCalculateClicked"   Style="{StaticResource PrimaryButton}"   Margin="0,0,10,10" />
+                <Button x:Name="ExportPdfButton"  Text="Export PDF"  Clicked="OnExportPdfClicked"   Style="{StaticResource SecondaryButton}" Margin="0,0,10,10" />
+                <Button x:Name="PrintButton"      Text="Print"       Clicked="OnPrintClicked"       Style="{StaticResource SecondaryButton}" Margin="0,0,10,10" />
+                <Button x:Name="ExportDxfButton"  Text="Export DXF"  Clicked="OnExportDxfClicked"   Style="{StaticResource SecondaryButton}" Margin="0,0,0,10" />
+            </FlexLayout>
+
+            <!-- Results -->
+            <Border Style="{StaticResource ResultBorder}">
+                <Label x:Name="ResultLabel" Text="Enter parameters above and tap Calculate." Style="{StaticResource ResultText}" />
+            </Border>
+
+            <!-- Preview -->
+            <Border Style="{StaticResource PreviewBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="PREVIEW" Style="{StaticResource SectionTitle}" />
+                    <GraphicsView x:Name="PetalPreview" HeightRequest="460"
+                                  BackgroundColor="{AppThemeBinding Light={StaticResource Card}, Dark={StaticResource CardDark}}" />
+                </VerticalStackLayout>
+            </Border>
+
         </VerticalStackLayout>
     </ScrollView>
 
