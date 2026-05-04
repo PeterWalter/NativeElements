@@ -21,6 +21,9 @@ public partial class App : Application
             args.SetObserved();
         };
 
+        // Load App.xaml resources (Colors.xaml + Styles.xaml MergedDictionaries)
+        InitializeComponent();
+
         try
         {
             // Use AppShell for tabbed navigation
