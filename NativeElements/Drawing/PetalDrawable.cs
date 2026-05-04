@@ -132,10 +132,10 @@ public class PetalDrawable : IDrawable
         float endY = startY + heightPx;
         float midY = startY + heightPx / 2;
 
-        // Vertical center line (height) - at the center horizontally
+        // Vertical center line (LENGTH) - at the center horizontally
         canvas.DrawLine(centerX, startY, centerX, endY);
 
-        // Horizontal center line (width) - at the vertical middle of petal
+        // Horizontal center line (WIDTH) - at the vertical middle of petal
         float halfWidth = widthPx / 2;
         canvas.DrawLine(centerX - halfWidth, midY, centerX + halfWidth, midY);
 
@@ -145,15 +145,15 @@ public class PetalDrawable : IDrawable
         canvas.FontSize = 12;
         canvas.FontColor = Colors.Red;
 
-        // Height dimension - actual height value (from heightPx)
-        double heightCm = PetalData?.PetalHeight ?? 0;
-        string heightText = $"H: {heightCm:F1}cm";
-        canvas.DrawString(heightText, centerX + 15, midY, HorizontalAlignment.Left);
+        // Length dimension - vertical line on the RIGHT side
+        double lengthCm = PetalData?.PetalHeight ?? 0;
+        string lengthText = $"Length: {lengthCm:F1}cm";
+        canvas.DrawString(lengthText, centerX + 25, midY - 10, HorizontalAlignment.Left);
 
-        // Width dimension - actual width value (from widthPx, which represents full width)
+        // Width dimension - horizontal line at the TOP
         double widthCm = PetalData?.PetalWidth ?? 0;
-        string widthText = $"W: {widthCm:F1}cm";
-        canvas.DrawString(widthText, centerX, startY - 15, HorizontalAlignment.Center);
+        string widthText = $"Width: {widthCm:F1}cm";
+        canvas.DrawString(widthText, centerX, startY - 20, HorizontalAlignment.Center);
     }
 
     private void DrawGrid(ICanvas canvas, RectF dirtyRect, float pixelsPerCm)

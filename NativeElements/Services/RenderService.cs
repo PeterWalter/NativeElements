@@ -182,10 +182,10 @@ public class RenderService
         canvas.DrawLine(centerX - halfWidthPx, midY, centerX + halfWidthPx, midY, redPaint);
 
         // Dimension labels
-        string heightText = $"H: {petalData.PetalHeight:F1}cm";
-        string widthText = $"W: {petalData.PetalWidth:F1}cm";
+        string lengthText = $"Length: {petalData.PetalHeight:F1}cm";
+        string widthText = $"Width: {petalData.PetalWidth:F1}cm";
 
-        canvas.DrawText(heightText, centerX + 20, midY + 10, textPaint);
+        canvas.DrawText(lengthText, centerX + 30, midY - 10, textPaint);
         canvas.DrawText(widthText, centerX - 40, startY - 10, textPaint);
     }
 
