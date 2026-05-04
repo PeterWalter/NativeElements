@@ -50,47 +50,53 @@ public class RenderService
         };
 
         var path = new SKPath();
-        float centerX = canvasWidth / 2f;
-        float centerY = canvasHeight / 2f;
 
-        // Scale curve points to canvas - use pixels per cm for 1:1 scale
-        float scaleX = (float)petalData.PixelsPerCm;
-        float scaleY = (float)petalData.PixelsPerCm;
+        // Calculate petal bounds
+        double maxWidth = petalData.PetalWidth / 2;
+        double maxHeight = petalData.PetalHeight;
+
+        float petalWidthPx = (float)maxWidth * (float)petalData.PixelsPerCm;
+        float petalHeightPx = (float)maxHeight * (float)petalData.PixelsPerCm;
+
+        // Calculate padding (2cm on each side)
+        float padding = (float)(2 * petalData.PixelsPerCm);
+        float availableWidth = canvasWidth - 2 * padding;
+        float availableHeight = canvasHeight - 2 * padding;
+
+        // Fit petal to available space
+        float scaleX = availableWidth / petalWidthPx;
+        float scaleY = availableHeight / petalHeightPx;
+        float fitScale = Math.Min(scaleX, scaleY);
+
+        // Center the petal
+        float centerX = canvasWidth / 2f;
+        float startY = padding + (availableHeight - petalHeightPx * fitScale) / 2;
 
         if (petalData.CurvePoints.Count > 0)
         {
-            // CurvePoints are Y-parameterized right-side seam:
-            // X = half-width at that height, Y = height from 0 to arcLength
-            // Create symmetric petal by:
-            // 1. Trace top point (Y=0, X=0)
-            // 2. Trace right side (X positive, Y increasing)
-            // 3. Trace bottom point (Y=arcLength, X=0)
-            // 4. Trace left side (X negative, Y decreasing)
-
             var firstPoint = petalData.CurvePoints[0];
             path.MoveTo(
-                centerX + (float)firstPoint.X * scaleX,
-                centerY + (float)firstPoint.Y * scaleY
+                centerX + (float)firstPoint.X * (float)petalData.PixelsPerCm * fitScale,
+                startY + (float)firstPoint.Y * (float)petalData.PixelsPerCm * fitScale
             );
 
-            // Trace right side (X=0 to X=max, Y from 0 to arcLength)
+            // Trace right side
             for (int i = 1; i < petalData.CurvePoints.Count; i++)
             {
                 var point = petalData.CurvePoints[i];
                 path.LineTo(
-                    centerX + (float)point.X * scaleX,
-                    centerY + (float)point.Y * scaleY
+                    centerX + (float)point.X * (float)petalData.PixelsPerCm * fitScale,
+                    startY + (float)point.Y * (float)petalData.PixelsPerCm * fitScale
                 );
             }
 
-            // Trace left side (mirror back: X=-max to X=0, Y from arcLength to 0)
+            // Trace left side (mirror)
             for (int i = petalData.CurvePoints.Count - 1; i >= 0; i--)
             {
                 var point = petalData.CurvePoints[i];
-                // Mirror X for left side
                 path.LineTo(
-                    centerX - (float)point.X * scaleX,
-                    centerY + (float)point.Y * scaleY
+                    centerX - (float)point.X * (float)petalData.PixelsPerCm * fitScale,
+                    startY + (float)point.Y * (float)petalData.PixelsPerCm * fitScale
                 );
             }
 
@@ -98,6 +104,44 @@ public class RenderService
         }
 
         canvas.DrawPath(path, paint);
+
+        // Draw center lines with dimensions
+        DrawPetalDimensions(canvas, petalData, centerX, startY, fitScale);
+    }
+
+    private static void DrawPetalDimensions(SKCanvas canvas, PetalOutput petalData, float centerX, float startY, float fitScale)
+    {
+        var redPaint = new SKPaint
+        {
+            Color = SKColors.Red,
+            StrokeWidth = 1,
+            IsStroke = true,
+            IsAntialias = true
+        };
+
+        var textPaint = new SKPaint
+        {
+            Color = SKColors.Red,
+            TextSize = 24,
+            IsAntialias = true
+        };
+
+        float scale = (float)petalData.PixelsPerCm * fitScale;
+        float petalWidthPx = (float)(petalData.PetalWidth / 2) * scale;
+        float petalHeightPx = (float)petalData.PetalHeight * scale;
+
+        // Vertical center line
+        canvas.DrawLine(centerX, startY, centerX, startY + petalHeightPx, redPaint);
+
+        // Horizontal center line
+        canvas.DrawLine(centerX - petalWidthPx, startY + petalHeightPx / 2, centerX + petalWidthPx, startY + petalHeightPx / 2, redPaint);
+
+        // Dimension labels
+        string heightText = $"H: {petalData.PetalHeight:F1}cm";
+        string widthText = $"W: {petalData.PetalWidth:F1}cm";
+
+        canvas.DrawText(heightText, centerX + 20, startY + petalHeightPx / 2 + 10, textPaint);
+        canvas.DrawText(widthText, centerX - 40, startY - 10, textPaint);
     }
 
     private static void DrawSegmentedRing(SKCanvas canvas, SegmentedRingOutput ringData, int canvasWidth, int canvasHeight, float lineWidth = 2)

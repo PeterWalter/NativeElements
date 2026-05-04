@@ -19,9 +19,32 @@ public class PetalDrawable : IDrawable
         canvas.FillColor = Colors.White;
         canvas.FillRectangle(dirtyRect);
 
-        float centerX = dirtyRect.Width / 2;
-        float centerY = dirtyRect.Height / 2;
         float scale = (float)PetalData.PixelsPerCm;
+        
+        // Calculate petal bounds
+        double maxWidth = PetalData.PetalWidth / 2;
+        double maxHeight = PetalData.PetalHeight;
+
+        float petalWidthPx = (float)maxWidth * scale;
+        float petalHeightPx = (float)maxHeight * scale;
+
+        // Calculate padding (10% on each side)
+        float padding = 20;
+        float availableWidth = dirtyRect.Width - 2 * padding;
+        float availableHeight = dirtyRect.Height - 2 * padding;
+
+        // Fit petal to available space
+        float scaleX = availableWidth / petalWidthPx;
+        float scaleY = availableHeight / petalHeightPx;
+        float fitScale = Math.Min(scaleX, scaleY);
+
+        // Adjust final dimensions
+        float finalPetalWidthPx = petalWidthPx * fitScale;
+        float finalPetalHeightPx = petalHeightPx * fitScale;
+
+        // Center the petal
+        float centerX = dirtyRect.Width / 2;
+        float startY = padding + (availableHeight - finalPetalHeightPx) / 2;
 
         canvas.StrokeColor = Colors.Black;
         canvas.StrokeSize = 2;
@@ -31,8 +54,8 @@ public class PetalDrawable : IDrawable
         // Start at first point (top of petal)
         var firstPoint = PetalData.CurvePoints[0];
         path.MoveTo(
-            centerX + (float)firstPoint.X * scale,
-            centerY + (float)firstPoint.Y * scale
+            centerX + (float)firstPoint.X * scale * fitScale,
+            startY + (float)firstPoint.Y * scale * fitScale
         );
 
         // Trace right side
@@ -40,8 +63,8 @@ public class PetalDrawable : IDrawable
         {
             var point = PetalData.CurvePoints[i];
             path.LineTo(
-                centerX + (float)point.X * scale,
-                centerY + (float)point.Y * scale
+                centerX + (float)point.X * scale * fitScale,
+                startY + (float)point.Y * scale * fitScale
             );
         }
 
@@ -50,16 +73,48 @@ public class PetalDrawable : IDrawable
         {
             var point = PetalData.CurvePoints[i];
             path.LineTo(
-                centerX - (float)point.X * scale,
-                centerY + (float)point.Y * scale
+                centerX - (float)point.X * scale * fitScale,
+                startY + (float)point.Y * scale * fitScale
             );
         }
 
         path.Close();
         canvas.DrawPath(path);
 
+        // Draw center lines with dimensions
+        DrawDimensionLines(canvas, centerX, startY, finalPetalHeightPx, finalPetalWidthPx);
+
         // Draw grid
-        DrawGrid(canvas, dirtyRect, scale);
+        DrawGrid(canvas, dirtyRect, scale * fitScale);
+    }
+
+    private void DrawDimensionLines(ICanvas canvas, float centerX, float startY, float heightPx, float widthPx)
+    {
+        canvas.StrokeColor = Color.FromArgb("#FF0000");
+        canvas.StrokeSize = 1;
+        canvas.StrokeDashPattern = new float[] { 2, 2 };
+
+        float endY = startY + heightPx;
+
+        // Vertical center line (height)
+        canvas.DrawLine(centerX, startY, centerX, endY);
+
+        // Horizontal center line (width)
+        canvas.DrawLine(centerX - widthPx / 2, startY + heightPx / 2, centerX + widthPx / 2, startY + heightPx / 2);
+
+        canvas.StrokeDashPattern = null;
+
+        // Draw dimension text
+        canvas.FontSize = 12;
+        canvas.FontColor = Colors.Red;
+
+        // Height dimension
+        string heightText = $"H:{(heightPx / (float)118.11):F1}cm";
+        canvas.DrawString(heightText, centerX + 10, startY + heightPx / 2, HorizontalAlignment.Left);
+
+        // Width dimension
+        string widthText = $"W:{(widthPx / (float)118.11):F1}cm";
+        canvas.DrawString(widthText, centerX, startY - 15, HorizontalAlignment.Center);
     }
 
     private void DrawGrid(ICanvas canvas, RectF dirtyRect, float pixelsPerCm)
@@ -82,3 +137,4 @@ public class PetalDrawable : IDrawable
         }
     }
 }
+
