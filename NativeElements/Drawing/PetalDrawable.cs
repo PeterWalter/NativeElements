@@ -126,9 +126,9 @@ public class PetalDrawable : IDrawable
         canvas.DrawString($"L = {data.ArcLength:F1} cm",
             centerX + halfW + 8, midY - 18, HorizontalAlignment.Left);
 
-        // "W = xx.x cm"  above the horizontal line, centred
+        // "W = xx.x cm"  at the centre width line, just above it
         canvas.DrawString($"W = {data.PetalWidth:F1} cm",
-            centerX, topY - 20, HorizontalAlignment.Center);
+            centerX, midY - 16, HorizontalAlignment.Center);
     }
 
     private static void DrawGrid(ICanvas canvas, RectF dirtyRect, float pixelsPerCm)

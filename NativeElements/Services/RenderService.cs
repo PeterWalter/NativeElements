@@ -150,8 +150,8 @@ public class RenderService
         // "L = xx.x cm" — right of centre, at midpoint
         canvas.DrawText($"L = {petalData.ArcLength:F1} cm", centerX + halfW + 10, midY, textPaint);
 
-        // "W = xx.x cm" — above the petal
-        canvas.DrawText($"W = {petalData.PetalWidth:F1} cm", centerX - 50, topY - 12, textPaint);
+        // "W = xx.x cm" — at the width line, centred
+        canvas.DrawText($"W = {petalData.PetalWidth:F1} cm", centerX - 50, midY - 8, textPaint);
     }
 
     private static void DrawSegmentedRing(SKCanvas canvas, SegmentedRingOutput ringData, int canvasWidth, int canvasHeight, float lineWidth = 2)
