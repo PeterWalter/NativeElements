@@ -152,7 +152,7 @@ public class PdfExportService
                 (float)R_o * PtPerCm, (float)R_i * PtPerCm, halfAngleRad, (float)sinA, (float)cosA);
 
             // 4. Outer and inner arc reference guides
-            DrawPdfOuterArc(canvas, cx, ringCy, (float)R_o * PtPerCm, halfAngleRad);
+            DrawPdfOuterArc(canvas, cx, ringCy, (float)R_o * PtPerCm, (float)R_i * PtPerCm, halfAngleRad);
             DrawPdfInnerArc(canvas, cx, ringCy, (float)R_i * PtPerCm, halfAngleRad);
 
             // 5. Annotations
@@ -227,23 +227,33 @@ public class PdfExportService
     /// <summary>
     /// Draw the outer arc inside the trapezoid (red dashed line).
     /// Shows the curved path that the outer edge follows when assembled in the ring.
+    /// Arc is clipped to stay within trapezoid bounds (between outer and inner chord lines).
     /// </summary>
-    private static void DrawPdfOuterArc(SKCanvas canvas, float cx, float ringCy, float roPt, double halfRad)
+    private static void DrawPdfOuterArc(SKCanvas canvas, float cx, float ringCy, float roPt, float riPt, double halfRad)
     {
         using var arcPaint = StrokePaint("#CC0000", 0.6f, new[] { 3f, 2f });
         const int arcSteps = 80;
+        
+        float outerY = ringCy - roPt * (float)Math.Cos(halfRad);
+        float innerY = ringCy - riPt * (float)Math.Cos(halfRad);
 
         for (int i = 0; i <= arcSteps; i++)
         {
             double t = -Math.PI / 2 - halfRad + i * 2 * halfRad / arcSteps;
             float x = cx + roPt * (float)Math.Cos(t);
             float y = ringCy + roPt * (float)Math.Sin(t);
+            
+            // Clamp y to trapezoid bounds [innerY, outerY]
+            y = Math.Max(innerY, Math.Min(outerY, y));
 
             if (i == 0) continue;
 
             double prevT = -Math.PI / 2 - halfRad + (i - 1) * 2 * halfRad / arcSteps;
             float prevX = cx + roPt * (float)Math.Cos(prevT);
             float prevY = ringCy + roPt * (float)Math.Sin(prevT);
+            
+            // Clamp previous y to trapezoid bounds
+            prevY = Math.Max(innerY, Math.Min(outerY, prevY));
             canvas.DrawLine(prevX, prevY, x, y, arcPaint);
         }
     }

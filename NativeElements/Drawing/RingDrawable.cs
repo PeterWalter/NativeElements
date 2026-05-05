@@ -63,7 +63,7 @@ public class RingDrawable : IDrawable
         DrawGrid(canvas, dirtyRect, s);
         DrawSegmentFill(canvas, cx, ringCy, roPx, riPx, alpha);
         DrawSegmentOutline(canvas, cx, ringCy, roPx, riPx, alpha);
-        DrawOuterArc(canvas, cx, ringCy, roPx, alpha);
+        DrawOuterArc(canvas, cx, ringCy, roPx, riPx, alpha);
         DrawInnerArc(canvas, cx, ringCy, riPx, alpha);
         DrawMiterAngleGuides(canvas, cx, ringCy, roPx, riPx, alpha, (float)sinA, (float)cosA);
         DrawAnnotations(canvas, cx, ringCy, s, alpha, sinA, cosA, roPx, riPx, 
@@ -117,8 +117,9 @@ public class RingDrawable : IDrawable
     /// Draw the outer arc inside the trapezoid (thin dashed line).
     /// Shows the curved path that the outer edge follows when assembled in the ring.
     /// Arc connects from left endpoint to right endpoint, bowed outward (above).
+    /// Arc is clipped to stay within trapezoid bounds (between outer and inner chord lines).
     /// </summary>
-    private static void DrawOuterArc(ICanvas canvas, float cx, float ringCy, float roPx, double alpha)
+    private static void DrawOuterArc(ICanvas canvas, float cx, float ringCy, float roPx, float riPx, double alpha)
     {
         canvas.StrokeColor = Color.FromArgb("#CC0000");  // red for outer arc
         canvas.StrokeSize = 0.8f;
@@ -127,19 +128,27 @@ public class RingDrawable : IDrawable
         float outerLeftX = cx - roPx * (float)Math.Sin(alpha);
         float outerRightX = cx + roPx * (float)Math.Sin(alpha);
         float outerY = ringCy - roPx * (float)Math.Cos(alpha);
+        float innerY = ringCy - riPx * (float)Math.Cos(alpha);
 
         // Draw arc from left endpoint to right endpoint (curved outward/upward)
+        // Clip arc to stay within trapezoid: between innerY and outerY
         for (int i = 0; i <= ArcSteps; i++)
         {
             double t = -Math.PI / 2 - alpha + i * 2 * alpha / ArcSteps;
             float x = cx + roPx * (float)Math.Cos(t);
             float y = ringCy + roPx * (float)Math.Sin(t);
             
+            // Clamp y to trapezoid bounds [innerY, outerY]
+            y = Math.Max(innerY, Math.Min(outerY, y));
+            
             if (i == 0) continue;
             
             double prevT = -Math.PI / 2 - alpha + (i - 1) * 2 * alpha / ArcSteps;
             float prevX = cx + roPx * (float)Math.Cos(prevT);
             float prevY = ringCy + roPx * (float)Math.Sin(prevT);
+            
+            // Clamp previous y to trapezoid bounds
+            prevY = Math.Max(innerY, Math.Min(outerY, prevY));
             canvas.DrawLine(prevX, prevY, x, y);
         }
 
