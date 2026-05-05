@@ -4,15 +4,15 @@ using Microsoft.Maui.Graphics;
 namespace NativeElements.Drawing;
 
 /// <summary>
-/// Renders the ring segment cutting guide.
+/// Renders the ring segment cutting guide as a flat isosceles trapezoid.
 ///
-/// Geometry: the board rectangle contains both arcs entirely, and the segment is centered vertically.
+/// Geometry: segment is a flat board piece (trapezoid shape):
 ///   • Board top/bottom edges define the board thickness
-///   • Ring centre positioned so segment is vertically centered on board
-///   • Outer arc = follows Ro radius (convex, pointing outward)
-///   • Inner arc = follows Ri radius (concave, pointing inward)
-///   • Both arcs share the same ring centre point
-///   • Miter cuts connect outer and inner arcs on left/right sides
+///   • Segment is centered vertically on board
+///   • Outer edge (longer chord) = 2·Ro·tan(α) from radius Ro
+///   • Inner edge (shorter chord) = 2·Ri·sin(α) from radius Ri
+///   • Miter cuts on left/right connect outer to inner edges
+///   • Grain runs radially (from outer to inner edge)
 /// </summary>
 public class RingDrawable : IDrawable
 {
@@ -76,35 +76,35 @@ public class RingDrawable : IDrawable
     // ── Segment path ──────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Closed path: outer arc → right miter → inner arc → left miter (close).
-    /// Both outer and inner edges are circular arcs centered at ring centre.
-    /// Outer arc: follows Ro radius (convex, pointing outward)
-    /// Inner arc: follows Ri radius (concave, pointing inward)
+    /// Closed path: isosceles trapezoid representing the flat board piece.
+    /// Outer edge (longer): outer chord using tan formula
+    /// Inner edge (shorter): inner chord using sin formula
+    /// Two miter cuts at sides (straight lines at cutting angle)
     /// </summary>
     private static PathF BuildSegmentPath(float cx, float ringCy, float roPx, float riPx, double alpha)
     {
         var path = new PathF();
 
-        // Outer arc: t from −α (left endpoint) → 0 (peak) → +α (right endpoint)
-        for (int i = 0; i <= ArcSteps; i++)
-        {
-            double t  = -alpha + i * 2.0 * alpha / ArcSteps;
-            float  px = cx + roPx * (float)Math.Sin(t);
-            float  py = ringCy - roPx * (float)Math.Cos(t);
-            if (i == 0) path.MoveTo(px, py); else path.LineTo(px, py);
-        }
+        // Trapezoid vertices (flat board view):
+        // Outer edge is longer (at y = ringCy - roPx)
+        // Inner edge is shorter (at y = ringCy - riPx·cos(α))
+        // Miter cuts on left and right connect them
+        
+        float outerLeftX = cx - roPx * (float)Math.Sin(alpha);
+        float outerRightX = cx + roPx * (float)Math.Sin(alpha);
+        float outerY = ringCy - roPx * (float)Math.Cos(alpha);  // outer chord level
+        
+        float innerLeftX = cx - riPx * (float)Math.Sin(alpha);
+        float innerRightX = cx + riPx * (float)Math.Sin(alpha);
+        float innerY = ringCy - riPx * (float)Math.Cos(alpha);  // inner chord level
 
-        // Inner arc: t from +α (right endpoint) → 0 (peak) → −α (left endpoint)
-        // First LineTo becomes the right miter cut; Close() handles left miter cut
-        for (int i = 0; i <= ArcSteps; i++)
-        {
-            double t  = alpha - i * 2.0 * alpha / ArcSteps;
-            float  px = cx + riPx * (float)Math.Sin(t);
-            float  py = ringCy - riPx * (float)Math.Cos(t);
-            path.LineTo(px, py);
-        }
+        // Build trapezoid: outer-left → outer-right → inner-right → inner-left → close
+        path.MoveTo(outerLeftX, outerY);
+        path.LineTo(outerRightX, outerY);      // outer edge (top)
+        path.LineTo(innerRightX, innerY);      // right miter cut
+        path.LineTo(innerLeftX, innerY);       // inner edge (bottom)
+        path.Close();                          // left miter cut auto-added
 
-        path.Close();
         return path;
     }
 

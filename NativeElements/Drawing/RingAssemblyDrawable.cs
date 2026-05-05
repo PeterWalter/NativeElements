@@ -93,34 +93,17 @@ public class RingAssemblyDrawable : IDrawable
         float innerRightX = cx + riScale * (float)Math.Sin(segmentCenterAngle + halfAngle);
         float innerRightY = cy - riScale * (float)Math.Cos(segmentCenterAngle + halfAngle);
 
-        // Build path for segment: outer arc → right miter → inner arc → left miter (close)
+        // For assembly view, show simplified trapezoid for each segment
+        // (not the full arc detail, just the flat board piece shape)
+        
         var path = new PathF();
-
-        // Outer arc: trace from left to right at outer radius
-        const int arcSteps = 40;
-        for (int i = 0; i <= arcSteps; i++)
-        {
-            double t = (segmentCenterAngle - halfAngle) + i * 2.0 * halfAngle / arcSteps;
-            float px = cx + roScale * (float)Math.Sin(t);
-            float py = cy - roScale * (float)Math.Cos(t);
-            
-            if (i == 0) path.MoveTo(px, py);
-            else path.LineTo(px, py);
-        }
-
-        // Right miter: connect outer-right to inner-right
-        path.LineTo(innerRightX, innerRightY);
-
-        // Inner arc: trace from right to left at inner radius (backwards to close the shape)
-        for (int i = 0; i <= arcSteps; i++)
-        {
-            double t = (segmentCenterAngle + halfAngle) - i * 2.0 * halfAngle / arcSteps;
-            float px = cx + riScale * (float)Math.Sin(t);
-            float py = cy - riScale * (float)Math.Cos(t);
-            path.LineTo(px, py);
-        }
-
-        path.Close();
+        
+        // Trapezoid vertices
+        path.MoveTo(outerLeftX, outerLeftY);
+        path.LineTo(outerRightX, outerRightY);   // outer edge (longer)
+        path.LineTo(innerRightX, innerRightY);   // right miter cut
+        path.LineTo(innerLeftX, innerLeftY);     // inner edge (shorter)
+        path.Close();                            // left miter cut auto-added
 
         // Fill segment with alternating colors for clarity
         bool isEven = (segmentIndex % 2) == 0;

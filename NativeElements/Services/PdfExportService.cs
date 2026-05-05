@@ -184,34 +184,31 @@ public class PdfExportService
     }
 
     /// <summary>
-    /// Closed segment path: outer arc → right miter → inner arc → left miter (close).
-    /// Both outer and inner edges are circular arcs centered at ring centre.
+    /// Closed segment path: isosceles trapezoid with straight edges.
+    /// Outer edge (longer): outer chord using tan formula
+    /// Inner edge (shorter): inner chord using sin formula
     /// </summary>
     private static SKPath BuildBoardViewSegmentPath(float cx, float ringCy,
         float roPt, float riPt, double halfRad, int steps = 80)
     {
         var path = new SKPath();
 
-        // Outer arc: t from −α (left endpoint) → 0 (peak) → +α (right endpoint)
-        for (int i = 0; i <= steps; i++)
-        {
-            double t  = -halfRad + i * 2.0 * halfRad / steps;
-            float  px = cx + roPt * (float)Math.Sin(t);
-            float  py = ringCy - roPt * (float)Math.Cos(t);
-            if (i == 0) path.MoveTo(px, py); else path.LineTo(px, py);
-        }
+        // Trapezoid vertices (flat board view)
+        float outerLeftX = cx - roPt * (float)Math.Sin(halfRad);
+        float outerRightX = cx + roPt * (float)Math.Sin(halfRad);
+        float outerY = ringCy - roPt * (float)Math.Cos(halfRad);
 
-        // Inner arc: t from +α (right endpoint) → 0 (peak) → −α (left endpoint)
-        // First LineTo becomes the right miter cut; Close = left miter cut
-        for (int i = 0; i <= steps; i++)
-        {
-            double t  = halfRad - i * 2.0 * halfRad / steps;
-            float  px = cx + riPt * (float)Math.Sin(t);
-            float  py = ringCy - riPt * (float)Math.Cos(t);
-            path.LineTo(px, py);
-        }
+        float innerLeftX = cx - riPt * (float)Math.Sin(halfRad);
+        float innerRightX = cx + riPt * (float)Math.Sin(halfRad);
+        float innerY = ringCy - riPt * (float)Math.Cos(halfRad);
 
-        path.Close();
+        // Build trapezoid path
+        path.MoveTo(outerLeftX, outerY);
+        path.LineTo(outerRightX, outerY);      // outer edge (longer)
+        path.LineTo(innerRightX, innerY);      // right miter cut
+        path.LineTo(innerLeftX, innerY);       // inner edge (shorter)
+        path.Close();                          // left miter cut auto-added
+
         return path;
     }
 
