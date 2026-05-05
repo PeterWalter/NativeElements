@@ -166,6 +166,10 @@ public class PdfExportService
             using var segOutline = StrokePaint("#000000", 0.85f);
             canvas.DrawPath(segPath, segOutline);
 
+            // 4b. Miter angle guide lines
+            DrawRingMiterAngleGuides(canvas, cx, ringCy,
+                (float)R_o * PtPerCm, (float)R_i * PtPerCm, halfAngleRad, (float)sinA, (float)cosA);
+
             // 5. Annotations
             DrawRingBoardAnnotations(canvas, ringData, cx, bLeft, bTop, boardWPt, boardHPt,
                 ringCy, halfAngleRad, sinA, cosA, boardWidthCm, minBW);
@@ -209,6 +213,33 @@ public class PdfExportService
 
         path.Close();
         return path;
+    }
+
+    /// <summary>
+    /// Draw angle guide lines on the left and right miter cuts showing the cutting angle.
+    /// The angle runs from outer arc to inner arc endpoints, showing where to make the miter cuts.
+    /// </summary>
+    private static void DrawRingMiterAngleGuides(SKCanvas canvas, float cx, float ringCy,
+        float roPt, float riPt, double halfRad, float sinA, float cosA)
+    {
+        // Left miter cut endpoint coordinates
+        float outerLeftX = cx - roPt * sinA;
+        float outerLeftY = ringCy - roPt * cosA;
+        float innerLeftX = cx - riPt * sinA;
+        float innerLeftY = ringCy - riPt * cosA;
+
+        // Right miter cut endpoint coordinates
+        float outerRightX = cx + roPt * sinA;
+        float outerRightY = ringCy - roPt * cosA;
+        float innerRightX = cx + riPt * sinA;
+        float innerRightY = ringCy - riPt * cosA;
+
+        // Draw left miter angle guide: line from outer to inner arc endpoints
+        using var miterPaint = StrokePaint("#FF6B35", 0.9f, new[] { 4f, 3f });
+        canvas.DrawLine(outerLeftX, outerLeftY, innerLeftX, innerLeftY, miterPaint);
+
+        // Draw right miter angle guide: line from outer to inner arc endpoints
+        canvas.DrawLine(outerRightX, outerRightY, innerRightX, innerRightY, miterPaint);
     }
 
     private static void DrawRingBoardAnnotations(SKCanvas canvas, SegmentedRingOutput data,

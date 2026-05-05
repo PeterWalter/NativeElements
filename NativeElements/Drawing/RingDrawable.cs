@@ -68,6 +68,7 @@ public class RingDrawable : IDrawable
         DrawSegmentFill(canvas, cx, ringCy, roPx, riPx, alpha);
         DrawBoardOutline(canvas, bx, by, boardW, boardH);
         DrawSegmentOutline(canvas, cx, ringCy, roPx, riPx, alpha);
+        DrawMiterAngleGuides(canvas, cx, ringCy, roPx, riPx, alpha, (float)sinA, (float)cosA);
         DrawAnnotations(canvas, bx, by, boardW, boardH, cx, ringCy, s, alpha,
                         sinA, cosA, roPx, riPx, boardWidthCm, minBW);
     }
@@ -150,6 +151,79 @@ public class RingDrawable : IDrawable
     }
 
     // ── Annotations ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Draw angle guide lines on the left and right miter cuts showing the cutting angle.
+    /// The angle runs from board top to board bottom, starting perpendicular and rotating by the miter angle.
+    /// </summary>
+    private static void DrawMiterAngleGuides(ICanvas canvas, float cx, float ringCy, 
+        float roPx, float riPx, double alpha, float sinA, float cosA)
+    {
+        // Left miter cut endpoint coordinates
+        float outerLeftX = cx - roPx * sinA;
+        float outerLeftY = ringCy - roPx * cosA;
+        float innerLeftX = cx - riPx * sinA;
+        float innerLeftY = ringCy - riPx * cosA;
+
+        // Right miter cut endpoint coordinates
+        float outerRightX = cx + roPx * sinA;
+        float outerRightY = ringCy - roPx * cosA;
+        float innerRightX = cx + riPx * sinA;
+        float innerRightY = ringCy - riPx * cosA;
+
+        // Draw left miter angle guide: line from outer to inner arc endpoints
+        canvas.StrokeColor = Color.FromArgb("#FF6B35");  // bright orange-red
+        canvas.StrokeSize = 1.2f;
+        canvas.StrokeDashPattern = new float[] { 5, 3 };
+        canvas.DrawLine(outerLeftX, outerLeftY, innerLeftX, innerLeftY);
+
+        // Draw right miter angle guide: line from outer to inner arc endpoints
+        canvas.DrawLine(outerRightX, outerRightY, innerRightX, innerRightY);
+
+        canvas.StrokeDashPattern = null;
+
+        // Add small angle arcs and labels to show the cutting angle more clearly
+        float arcRadius = 8f;
+        
+        // Left angle annotation
+        double leftAngle = Math.Atan2(innerLeftY - outerLeftY, innerLeftX - outerLeftX);
+        double perpAngle = -Math.PI / 2;  // perpendicular (straight down)
+        
+        canvas.StrokeColor = Color.FromArgb("#FF6B35");
+        canvas.StrokeSize = 0.8f;
+        
+        // Draw small arc to show angle at left
+        for (int i = 0; i <= 20; i++)
+        {
+            double t = perpAngle + i * (leftAngle - perpAngle) / 20.0;
+            float x = outerLeftX + arcRadius * (float)Math.Cos(t);
+            float y = outerLeftY + arcRadius * (float)Math.Sin(t);
+            if (i == 0) continue;
+            
+            double prevT = perpAngle + (i - 1) * (leftAngle - perpAngle) / 20.0;
+            float prevX = outerLeftX + arcRadius * (float)Math.Cos(prevT);
+            float prevY = outerLeftY + arcRadius * (float)Math.Sin(prevT);
+            canvas.DrawLine(prevX, prevY, x, y);
+        }
+
+        // Right angle annotation (mirrored)
+        double rightAngle = Math.Atan2(innerRightY - outerRightY, innerRightX - outerRightX);
+        double rightPerpAngle = Math.PI / 2;  // perpendicular (straight down, mirrored)
+        
+        for (int i = 0; i <= 20; i++)
+        {
+            double t = rightPerpAngle - i * (rightPerpAngle - rightAngle) / 20.0;
+            float x = outerRightX + arcRadius * (float)Math.Cos(t);
+            float y = outerRightY + arcRadius * (float)Math.Sin(t);
+            if (i == 0) continue;
+            
+            double prevT = rightPerpAngle - (i - 1) * (rightPerpAngle - rightAngle) / 20.0;
+            float prevX = outerRightX + arcRadius * (float)Math.Cos(prevT);
+            float prevY = outerRightY + arcRadius * (float)Math.Sin(prevT);
+            canvas.DrawLine(prevX, prevY, x, y);
+        }
+    }
+
 
     private void DrawAnnotations(ICanvas canvas, float bx, float by, float boardW, float boardH,
         float cx, float ringCy, float s, double alpha, double sinA, double cosA,
