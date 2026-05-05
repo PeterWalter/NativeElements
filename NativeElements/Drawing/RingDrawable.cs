@@ -13,6 +13,11 @@ namespace NativeElements.Drawing;
 ///   • Inner edge (shorter chord) = 2·Ri·sin(α) from radius Ri
 ///   • Miter cuts on left/right connect outer to inner edges
 ///   • Grain runs radially (from outer to inner edge)
+///
+/// Reference guides:
+///   • Outer arc (red dashed): shows where outer edge sits in complete ring
+///   • Inner arc (blue dashed): shows where inner edge sits in complete ring
+///   • Miter angle guides: show cutting angles at left and right edges
 /// </summary>
 public class RingDrawable : IDrawable
 {
@@ -68,6 +73,8 @@ public class RingDrawable : IDrawable
         DrawSegmentFill(canvas, cx, ringCy, roPx, riPx, alpha);
         DrawBoardOutline(canvas, bx, by, boardW, boardH);
         DrawSegmentOutline(canvas, cx, ringCy, roPx, riPx, alpha);
+        DrawOuterArc(canvas, cx, ringCy, roPx, alpha);
+        DrawInnerArc(canvas, cx, ringCy, riPx, alpha);
         DrawMiterAngleGuides(canvas, cx, ringCy, roPx, riPx, alpha, (float)sinA, (float)cosA);
         DrawAnnotations(canvas, bx, by, boardW, boardH, cx, ringCy, s, alpha,
                         sinA, cosA, roPx, riPx, boardWidthCm, minBW);
@@ -139,6 +146,70 @@ public class RingDrawable : IDrawable
         canvas.StrokeSize        = 1f;
         canvas.StrokeDashPattern = new float[] { 5, 3 };
         canvas.DrawRectangle(bx, by, boardW, boardH);
+        canvas.StrokeDashPattern = null;
+    }
+
+    /// <summary>
+    /// Draw the outer arc as a reference guide (thin dashed line).
+    /// Shows the arc that the outer edge of the trapezoid follows in the ring.
+    /// </summary>
+    private static void DrawOuterArc(ICanvas canvas, float cx, float ringCy, float roPx, double alpha)
+    {
+        canvas.StrokeColor = Color.FromArgb("#CC0000");  // red for outer arc
+        canvas.StrokeSize = 0.8f;
+        canvas.StrokeDashPattern = new float[] { 4, 3 };
+
+        float outerLeftX = cx - roPx * (float)Math.Sin(alpha);
+        float outerRightX = cx + roPx * (float)Math.Sin(alpha);
+        float outerY = ringCy - roPx * (float)Math.Cos(alpha);
+
+        // Draw arc from left to right endpoint
+        for (int i = 0; i <= ArcSteps; i++)
+        {
+            double t = -Math.PI / 2 - alpha + i * 2 * alpha / ArcSteps;
+            float x = cx + roPx * (float)Math.Cos(t);
+            float y = ringCy + roPx * (float)Math.Sin(t);
+            
+            if (i == 0) continue;
+            
+            double prevT = -Math.PI / 2 - alpha + (i - 1) * 2 * alpha / ArcSteps;
+            float prevX = cx + roPx * (float)Math.Cos(prevT);
+            float prevY = ringCy + roPx * (float)Math.Sin(prevT);
+            canvas.DrawLine(prevX, prevY, x, y);
+        }
+
+        canvas.StrokeDashPattern = null;
+    }
+
+    /// <summary>
+    /// Draw the inner arc as a reference guide (thin dashed line).
+    /// Shows the arc that the inner edge of the trapezoid follows in the ring.
+    /// </summary>
+    private static void DrawInnerArc(ICanvas canvas, float cx, float ringCy, float riPx, double alpha)
+    {
+        canvas.StrokeColor = Color.FromArgb("#0066CC");  // blue for inner arc
+        canvas.StrokeSize = 0.8f;
+        canvas.StrokeDashPattern = new float[] { 4, 3 };
+
+        float innerLeftX = cx - riPx * (float)Math.Sin(alpha);
+        float innerRightX = cx + riPx * (float)Math.Sin(alpha);
+        float innerY = ringCy - riPx * (float)Math.Cos(alpha);
+
+        // Draw arc from left to right endpoint
+        for (int i = 0; i <= ArcSteps; i++)
+        {
+            double t = -Math.PI / 2 - alpha + i * 2 * alpha / ArcSteps;
+            float x = cx + riPx * (float)Math.Cos(t);
+            float y = ringCy + riPx * (float)Math.Sin(t);
+            
+            if (i == 0) continue;
+            
+            double prevT = -Math.PI / 2 - alpha + (i - 1) * 2 * alpha / ArcSteps;
+            float prevX = cx + riPx * (float)Math.Cos(prevT);
+            float prevY = ringCy + riPx * (float)Math.Sin(prevT);
+            canvas.DrawLine(prevX, prevY, x, y);
+        }
+
         canvas.StrokeDashPattern = null;
     }
 
@@ -254,12 +325,19 @@ public class RingDrawable : IDrawable
             cx, by - 38f, HorizontalAlignment.Center);
         canvas.FontSize  = 9f;
         canvas.FontColor = Color.FromArgb("#555555");
-        canvas.DrawString("Outer arc peak is at board top edge. Shade = waste wood.",
+        canvas.DrawString("Trapezoid = wood to cut. Red/Blue dashed arcs show ring position. Shade = waste.",
             cx, by - 26f, HorizontalAlignment.Center);
 
         float legY = by - 11f;
         DrawSwatch(canvas, cx - 100f, legY, "#D4A96A", "Wood to keep");
         DrawSwatch(canvas, cx + 10f,  legY, "#E8624A", "Waste (cut off)");
+
+        // ── Arc reference labels ──────────────────────────────────────────────
+        canvas.FontSize = 8f;
+        canvas.FontColor = Color.FromArgb("#CC0000");
+        canvas.DrawString("OUTER ARC", cx - 50f, ringCy - roPx * (float)cosA - 8f, HorizontalAlignment.Center);
+        canvas.FontColor = Color.FromArgb("#0066CC");
+        canvas.DrawString("INNER ARC", cx + 50f, ringCy - riPx * (float)cosA + 8f, HorizontalAlignment.Center);
 
         // ── Outer arc label (inside board top-corner waste areas) ─────────────
         canvas.FontSize  = 8f;
@@ -274,7 +352,7 @@ public class RingDrawable : IDrawable
         canvas.DrawLine(outerRightX, outerEndY - 5, outerRightX, outerEndY + 5);
         canvas.StrokeDashPattern = null;
         canvas.FontSize = 9f; canvas.FontColor = Color.FromArgb("#8B5E1E");
-        canvas.DrawString($"OUTER CHORD (Lo) = {d.OuterEdgeLength:F2} cm",
+        canvas.DrawString($"OUTER EDGE (Long) = {d.OuterEdgeLength:F2} cm",
             cx, outerEndY + 9f, HorizontalAlignment.Center);
 
         // ── Inner chord dim line ───────────────────────────────────────────────
@@ -286,7 +364,7 @@ public class RingDrawable : IDrawable
         canvas.DrawLine(innerRightX, beY, innerRightX, innerChordY);
         canvas.StrokeDashPattern = null;
         canvas.FontSize = 9f; canvas.FontColor = Color.FromArgb("#8B5E1E");
-        canvas.DrawString($"INNER CHORD (Li) = {d.InnerEdgeLength:F2} cm",
+        canvas.DrawString($"INNER EDGE (Short) = {d.InnerEdgeLength:F2} cm",
             cx, beY - 2f, HorizontalAlignment.Center);
 
         // Inner arc label
