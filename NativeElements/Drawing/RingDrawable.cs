@@ -6,18 +6,17 @@ namespace NativeElements.Drawing;
 /// <summary>
 /// Renders the ring segment cutting guide as a flat isosceles trapezoid.
 ///
-/// Geometry: segment is a flat board piece (trapezoid shape):
-///   • Board top/bottom edges define the board thickness
-///   • Segment is centered vertically on board
-///   • Outer edge (longer chord) = 2·Ro·tan(α) from radius Ro
-///   • Inner edge (shorter chord) = 2·Ri·sin(α) from radius Ri
-///   • Miter cuts on left/right connect outer to inner edges
-///   • Grain runs radially (from outer to inner edge)
+/// The segment shows the flat board piece that will be cut and assembled:
+///   • Trapezoid shape (flat board piece) with straight edges
+///   • Outer edge (longer): represents outer radius of the ring segment
+///   • Inner edge (shorter): represents inner radius of the ring segment
+///   • Miter cuts on left/right: the angles of the trapezoid sides (where to cut)
+///   • Grain direction: runs radially (from outer to inner edge)
 ///
-/// Reference guides:
-///   • Outer arc (red dashed): shows where outer edge sits in complete ring
-///   • Inner arc (blue dashed): shows where inner edge sits in complete ring
-///   • Miter angle guides: show cutting angles at left and right edges
+/// Inside the trapezoid:
+///   • Outer arc (red dashed): shows the curvature of where outer edge sits in the ring
+///   • Inner arc (blue dashed): shows the curvature of where inner edge sits in the ring
+///   • These arcs help verify the segment geometry is correct
 /// </summary>
 public class RingDrawable : IDrawable
 {
@@ -150,8 +149,9 @@ public class RingDrawable : IDrawable
     }
 
     /// <summary>
-    /// Draw the outer arc as a reference guide (thin dashed line).
-    /// Shows the arc that the outer edge of the trapezoid follows in the ring.
+    /// Draw the outer arc inside the trapezoid (thin dashed line).
+    /// Shows the curved path that the outer edge follows when assembled in the ring.
+    /// Arc connects from left endpoint to right endpoint, bowed outward (above).
     /// </summary>
     private static void DrawOuterArc(ICanvas canvas, float cx, float ringCy, float roPx, double alpha)
     {
@@ -163,7 +163,7 @@ public class RingDrawable : IDrawable
         float outerRightX = cx + roPx * (float)Math.Sin(alpha);
         float outerY = ringCy - roPx * (float)Math.Cos(alpha);
 
-        // Draw arc from left to right endpoint
+        // Draw arc from left endpoint to right endpoint (curved outward/upward)
         for (int i = 0; i <= ArcSteps; i++)
         {
             double t = -Math.PI / 2 - alpha + i * 2 * alpha / ArcSteps;
@@ -182,8 +182,9 @@ public class RingDrawable : IDrawable
     }
 
     /// <summary>
-    /// Draw the inner arc as a reference guide (thin dashed line).
-    /// Shows the arc that the inner edge of the trapezoid follows in the ring.
+    /// Draw the inner arc inside the trapezoid (thin dashed line).
+    /// Shows the curved path that the inner edge follows when assembled in the ring.
+    /// Arc connects from left endpoint to right endpoint, bowed inward (below/upward toward center).
     /// </summary>
     private static void DrawInnerArc(ICanvas canvas, float cx, float ringCy, float riPx, double alpha)
     {
@@ -195,7 +196,7 @@ public class RingDrawable : IDrawable
         float innerRightX = cx + riPx * (float)Math.Sin(alpha);
         float innerY = ringCy - riPx * (float)Math.Cos(alpha);
 
-        // Draw arc from left to right endpoint
+        // Draw arc from left endpoint to right endpoint (curved inward/upward toward center)
         for (int i = 0; i <= ArcSteps; i++)
         {
             double t = -Math.PI / 2 - alpha + i * 2 * alpha / ArcSteps;
@@ -325,19 +326,12 @@ public class RingDrawable : IDrawable
             cx, by - 38f, HorizontalAlignment.Center);
         canvas.FontSize  = 9f;
         canvas.FontColor = Color.FromArgb("#555555");
-        canvas.DrawString("Trapezoid = wood to cut. Red/Blue dashed arcs show ring position. Shade = waste.",
+        canvas.DrawString("Trapezoid to cut. Red arc = outer edge curve. Blue arc = inner edge curve. Shade = waste.",
             cx, by - 26f, HorizontalAlignment.Center);
 
         float legY = by - 11f;
         DrawSwatch(canvas, cx - 100f, legY, "#D4A96A", "Wood to keep");
         DrawSwatch(canvas, cx + 10f,  legY, "#E8624A", "Waste (cut off)");
-
-        // ── Arc reference labels ──────────────────────────────────────────────
-        canvas.FontSize = 8f;
-        canvas.FontColor = Color.FromArgb("#CC0000");
-        canvas.DrawString("OUTER ARC", cx - 50f, ringCy - roPx * (float)cosA - 8f, HorizontalAlignment.Center);
-        canvas.FontColor = Color.FromArgb("#0066CC");
-        canvas.DrawString("INNER ARC", cx + 50f, ringCy - riPx * (float)cosA + 8f, HorizontalAlignment.Center);
 
         // ── Outer arc label (inside board top-corner waste areas) ─────────────
         canvas.FontSize  = 8f;

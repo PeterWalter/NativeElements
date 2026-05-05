@@ -244,8 +244,8 @@ public class PdfExportService
     }
 
     /// <summary>
-    /// Draw the outer arc as a reference guide (red dashed line) in the PDF.
-    /// Shows the arc that the outer edge of the trapezoid follows in the ring.
+    /// Draw the outer arc inside the trapezoid (red dashed line).
+    /// Shows the curved path that the outer edge follows when assembled in the ring.
     /// </summary>
     private static void DrawPdfOuterArc(SKCanvas canvas, float cx, float ringCy, float roPt, double halfRad)
     {
@@ -268,8 +268,8 @@ public class PdfExportService
     }
 
     /// <summary>
-    /// Draw the inner arc as a reference guide (blue dashed line) in the PDF.
-    /// Shows the arc that the inner edge of the trapezoid follows in the ring.
+    /// Draw the inner arc inside the trapezoid (blue dashed line).
+    /// Shows the curved path that the inner edge follows when assembled in the ring.
     /// </summary>
     private static void DrawPdfInnerArc(SKCanvas canvas, float cx, float ringCy, float riPt, double halfRad)
     {
