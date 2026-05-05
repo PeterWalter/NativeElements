@@ -18,7 +18,7 @@
                 <VerticalStackLayout Spacing="16">
                     <Label Text="PARAMETERS" Style="{StaticResource SectionTitle}" />
 
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="14">
 
                         <!-- Outer Radius -->
                         <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
@@ -49,6 +49,22 @@
                             <Label Text="Export DPI" Style="{StaticResource FieldLabel}" />
                             <Border Style="{StaticResource InputContainer}">
                                 <Entry x:Name="RingDpiEntry" Text="300" Keyboard="Numeric" Placeholder="e.g. 300" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Board Length -->
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="0" Spacing="4">
+                            <Label Text="Available Board Length (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="BoardLengthEntry" Text="" Keyboard="Numeric" Placeholder="e.g. 120 (optional)" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Board Width -->
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
+                            <Label Text="Board Width / Thickness (cm)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputContainer}">
+                                <Entry x:Name="BoardWidthEntry" Text="" Keyboard="Numeric" Placeholder="e.g. 6 (optional)" />
                             </Border>
                         </VerticalStackLayout>
 

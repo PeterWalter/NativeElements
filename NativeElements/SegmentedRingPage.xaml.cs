@@ -48,10 +48,12 @@ public partial class SegmentedRingPage : ContentPage
 
             var input = new SegmentedRingInput
             {
-                OuterRadius = outer,
-                InnerRadius = inner,
+                OuterRadius      = outer,
+                InnerRadius      = inner,
                 NumberOfSegments = segments,
-                Dpi = dpi
+                Dpi              = dpi,
+                BoardLength      = double.TryParse(BoardLengthEntry.Text,  out double bl) && bl > 0 ? bl : 0,
+                BoardWidth       = double.TryParse(BoardWidthEntry.Text,   out double bw) && bw > 0 ? bw : 0,
             };
 
             var output = SegmentedRingMathService.CalculateSegment(input);
@@ -65,12 +67,29 @@ public partial class SegmentedRingPage : ContentPage
             }
 
             // Show results immediately
-            RingResultLabel.Text =
-                $"Segment Angle:  {output.SegmentAngle:F2}°\n" +
-                $"Miter Angle (θ): {output.MiterAngle:F2}°\n" +
-                $"Outer Chord (Lo): {output.OuterEdgeLength:F3} cm  |  Outer Arc: {output.OuterArcLength:F3} cm\n" +
-                $"Inner Chord (Li): {output.InnerEdgeLength:F3} cm  |  Inner Arc: {output.InnerArcLength:F3} cm\n" +
-                $"Radial Width (W): {output.RadialEdgeLength:F3} cm";
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Segment Angle:  {output.SegmentAngle:F2}°");
+            sb.AppendLine($"Miter Angle (θ): {output.MiterAngle:F2}°");
+            sb.AppendLine($"Outer Chord (Lo): {output.OuterEdgeLength:F3} cm  |  Outer Arc: {output.OuterArcLength:F3} cm");
+            sb.AppendLine($"Inner Chord (Li): {output.InnerEdgeLength:F3} cm  |  Inner Arc: {output.InnerArcLength:F3} cm");
+            sb.Append(    $"Radial Width (W): {output.RadialEdgeLength:F3} cm");
+            sb.AppendLine();
+            sb.AppendLine($"─────────────────────────────────────");
+            sb.Append(    $"Min board width needed: {output.MinBoardWidth:F2} cm");
+            if (!output.BoardWidthFits)
+            {
+                sb.AppendLine();
+                sb.Append(    $"⚠ Board too narrow! Your board ({output.UserBoardWidthUsed:F1} cm) < min ({output.MinBoardWidth:F2} cm)");
+            }
+            if (output.SegmentsPerBoard > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"─────────────────────────────────────");
+                sb.AppendLine($"Board Length: {output.BoardLengthUsed:F1} cm");
+                sb.AppendLine($"Segments per board: {output.SegmentsPerBoard}");
+                sb.Append(    $"Offcut: {output.BoardOffcut:F2} cm");
+            }
+            RingResultLabel.Text = sb.ToString();
 
             // Save to history (do not block UI)
             var history = new CalculationHistory

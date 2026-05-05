@@ -6,6 +6,11 @@ public class SegmentedRingInput
     public double InnerRadius { get; set; }
     public int NumberOfSegments { get; set; }
     public double Dpi { get; set; } = 300;
+    /// <summary>Length of board material available (cm, chord direction). 0 = not specified.</summary>
+    public double BoardLength { get; set; } = 0;
+
+    /// <summary>Radial-direction thickness of available board plank (cm). 0 = not specified.</summary>
+    public double BoardWidth { get; set; } = 0;
 }
 
 public class SegmentedRingOutput
@@ -38,4 +43,22 @@ public class SegmentedRingOutput
     public double RadialEdgeLength { get; set; }
 
     public double PixelsPerCm { get; set; }
+
+    /// <summary>User-specified available board length (cm, 0 = not given).</summary>
+    public double BoardLengthUsed { get; set; }
+
+    /// <summary>How many ring segments can be cut from one board of BoardLengthUsed.</summary>
+    public int SegmentsPerBoard { get; set; }
+
+    /// <summary>Leftover board length after cutting SegmentsPerBoard segments (cm).</summary>
+    public double BoardOffcut { get; set; }
+
+    /// <summary>Minimum board width (radial depth) needed to fit the segment: R_o − R_i·cos(α) (cm).</summary>
+    public double MinBoardWidth { get; set; }
+
+    /// <summary>Whether the user's board width fits (true when BoardWidth=0 or ≥ MinBoardWidth).</summary>
+    public bool BoardWidthFits { get; set; }
+
+    /// <summary>User-specified board width (cm, 0 = not given). Stored for drawing.</summary>
+    public double UserBoardWidthUsed { get; set; }
 }
