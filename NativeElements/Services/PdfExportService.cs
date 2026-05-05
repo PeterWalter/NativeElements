@@ -325,6 +325,17 @@ public class PdfExportService
         string beStr = $"INNER EDGE = {data.InnerEdgeLength:F2} cm";
         canvas.DrawText(beStr, cx - brn7.MeasureText(beStr) / 2f, innerDimY - 2f, brn7);
 
+        // ── Board width (trapezoid height) dimension line on right side ───────
+        using var bluDash = StrokePaint("#4169E1", 0.5f, new[] { 3f, 2f });
+        using var blu7 = TextPaint("#4169E1", 7f);
+        float rightDimX = Math.Max(outerRightX + 16f, innerRightX + 16f);
+        canvas.DrawLine(rightDimX, outerY, rightDimX, innerY, bluDash);
+        canvas.DrawLine(rightDimX - 3f, outerY, rightDimX + 3f, outerY, bluDash);
+        canvas.DrawLine(rightDimX - 3f, innerY, rightDimX + 3f, innerY, bluDash);
+        float boardWidthPt = (float)data.MinBoardWidth * PtPerCm;
+        string bwStr = $"BOARD WIDTH = {data.MinBoardWidth:F2} cm";
+        canvas.DrawText(bwStr, rightDimX + 20f, (outerY + innerY) / 2f - blu7.TextSize / 2f, blu7);
+
         // ── Miter angle labels (left side) ─────────────────────────────────────
         float leftX = outerLeftX - 50f;
         canvas.DrawText("MITER ANGLE",        leftX, midSection - 12f, nvy7);

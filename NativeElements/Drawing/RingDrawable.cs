@@ -317,6 +317,19 @@ public class RingDrawable : IDrawable
         canvas.DrawString($"INNER EDGE = {d.InnerEdgeLength:F2} cm",
             cx, innerDimY - 2f, HorizontalAlignment.Center);
 
+        // ── Board width (trapezoid height) dimension line on the right side ───
+        float rightDimX = Math.Max(outerRightX + 20f, innerRightX + 20f);
+        canvas.StrokeColor = Color.FromArgb("#4169E1"); canvas.StrokeSize = 0.7f;
+        canvas.StrokeDashPattern = new float[] { 3, 2 };
+        canvas.DrawLine(rightDimX, outerY, rightDimX, innerY);
+        canvas.DrawLine(rightDimX - 4, outerY, rightDimX + 4, outerY);
+        canvas.DrawLine(rightDimX - 4, innerY, rightDimX + 4, innerY);
+        canvas.StrokeDashPattern = null;
+        canvas.FontSize = 8f; canvas.FontColor = Color.FromArgb("#4169E1");
+        float boardWidthCm = (d.UserBoardWidthUsed > 0 && d.UserBoardWidthUsed > 0) ? d.UserBoardWidthUsed : d.MinBoardWidth;
+        canvas.DrawString($"BOARD WIDTH = {boardWidthCm:F2} cm", 
+            rightDimX + 30f, (outerY + innerY) / 2f, HorizontalAlignment.Left);
+
         // ── Miter angle labels (left side) ────────────────────────────────────
         canvas.FontSize = 8f; canvas.FontColor = Color.FromArgb("#1A1A8C");
         float leftX = outerLeftX - 80f;
