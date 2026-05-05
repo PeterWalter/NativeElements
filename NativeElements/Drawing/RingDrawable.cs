@@ -326,7 +326,7 @@ public class RingDrawable : IDrawable
         canvas.DrawLine(rightDimX - 4, innerY, rightDimX + 4, innerY);
         canvas.StrokeDashPattern = null;
         canvas.FontSize = 8f; canvas.FontColor = Color.FromArgb("#4169E1");
-        float boardWidthCm = (d.UserBoardWidthUsed > 0 && d.UserBoardWidthUsed > 0) ? d.UserBoardWidthUsed : d.MinBoardWidth;
+        float boardWidthCm = (float)((d.UserBoardWidthUsed > 0 && d.UserBoardWidthUsed > 0) ? d.UserBoardWidthUsed : d.MinBoardWidth);
         canvas.DrawString($"BOARD WIDTH = {boardWidthCm:F2} cm", 
             rightDimX + 30f, (outerY + innerY) / 2f, HorizontalAlignment.Left);
 
