@@ -65,11 +65,12 @@ public partial class SegmentedRingPage : ContentPage
             }
 
             // Show results immediately
-            RingResultLabel.Text = $"Segment Angle: {output.SegmentAngle:F2}°\n" +
-                                  $"Outer Edge: {output.OuterEdgeLength:F2} cm\n" +
-                                  $"Inner Edge: {output.InnerEdgeLength:F2} cm\n" +
-                                  $"Radial Edge: {output.RadialEdgeLength:F2} cm\n" +
-                                  $"Pixels/cm: {output.PixelsPerCm:F2}";
+            RingResultLabel.Text =
+                $"Segment Angle:  {output.SegmentAngle:F2}°\n" +
+                $"Miter Angle (θ): {output.MiterAngle:F2}°\n" +
+                $"Outer Chord (Lo): {output.OuterEdgeLength:F3} cm  |  Outer Arc: {output.OuterArcLength:F3} cm\n" +
+                $"Inner Chord (Li): {output.InnerEdgeLength:F3} cm  |  Inner Arc: {output.InnerArcLength:F3} cm\n" +
+                $"Radial Width (W): {output.RadialEdgeLength:F3} cm";
 
             // Save to history (do not block UI)
             var history = new CalculationHistory

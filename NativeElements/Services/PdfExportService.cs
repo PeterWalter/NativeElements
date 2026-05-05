@@ -91,48 +91,40 @@ public class PdfExportService
         });
     }
 
-    // ─── Ring ─────────────────────────────────────────────────────────────────
+    // ─── Ring (single segment, 1:1 scale) ────────────────────────────────────
 
     public static async Task<string> ExportRingToPdfAsync(SegmentedRingOutput ringData, string fileName, double dpi = 300)
     {
         return await Task.Run(() =>
         {
-            float segAngle = (float)ringData.SegmentAngle;
-            if (segAngle <= 0f || segAngle >= 360f) throw new InvalidOperationException("Invalid segment angle.");
+            double R_o = ringData.OuterRadius;
+            double R_i = ringData.InnerRadius;
+            if (R_o <= 0 || R_i <= 0 || R_i >= R_o)
+                throw new InvalidOperationException("Invalid ring radii.");
 
-            double angleRad = Math.PI * segAngle / 180.0;
-            double sinHalf  = Math.Sin(angleRad / 2.0);
-            if (Math.Abs(sinHalf) < 1e-9) throw new InvalidOperationException("Degenerate angle.");
+            double halfAngleDeg = ringData.MiterAngle;
+            double halfAngleRad = halfAngleDeg * Math.PI / 180.0;
+            double sinHalf = Math.Sin(halfAngleRad);
+            double cosHalf = Math.Cos(halfAngleRad);
 
-            double outerRCm = ringData.OuterEdgeLength / (2.0 * sinHalf);
-            double innerRCm = ringData.InnerEdgeLength  / (2.0 * sinHalf);
-            if (outerRCm <= 0) throw new InvalidOperationException("Invalid ring dimensions.");
-            if (innerRCm <= 0 || innerRCm >= outerRCm)
-                innerRCm = Math.Max(0.1, outerRCm - Math.Max(0.1, ringData.RadialEdgeLength));
+            // Physical segment bounding box (cm)
+            float segWidthCm  = (float)(2.0 * R_o * sinHalf);   // outer chord = Lo
+            float segHeightCm = (float)(R_o - R_i * cosHalf);   // outer-top to inner corners
 
-            float outerRPt = (float)outerRCm * PtPerCm;
-            float innerRPt = (float)innerRCm * PtPerCm;
+            // Reserves
+            const float titleSizePt  = 9f;
+            const float titleGapPt   = 4f;
+            const float topReservePt = titleSizePt + titleGapPt + 12f; // title + Lo label
+            const float botReservePt = 14f;  // Li label below inner arc
+            const float rightResrvPt = 62f;  // W label + θ on right/left
+            const float leftResrvPt  = 28f;  // θ angle indicator
 
-            // ---- Compact page: only the annular sector, not the full fan from centre ----
-            // Sector points downward; bounding box of the annular part only:
-            //   Width  = 2 × outerR × sin(θ/2)   (outer chord)
-            //   Height = outerR − innerR × cos(θ/2)  (outer mid-arc to topmost inner arc points)
-            float cosHalf        = (float)Math.Cos(angleRad / 2.0);
-            float sectorWidthCm  = 2f * (float)outerRCm * (float)sinHalf;
-            float topFromCtrCm   = (float)innerRCm * cosHalf;   // innermost visible Y below ring centre
-            float sectorHeightCm = (float)outerRCm - topFromCtrCm;
+            float pageWidthPt  = segWidthCm * PtPerCm + leftResrvPt + rightResrvPt;
+            float pageHeightPt = segHeightCm * PtPerCm + MarginPt + topReservePt + botReservePt + MarginPt;
 
-            const float titleSizePt = 8f;
-            const float titleGapPt  = 3f;
-            float topReservePt = titleSizePt + titleGapPt;
-
-            float pageWidthPt  = (sectorWidthCm  + 2f * MarginCm) * PtPerCm;
-            float pageHeightPt = (sectorHeightCm + 2f * MarginCm) * PtPerCm + topReservePt;
-
-            // Ring centre in page coordinates — sits above the top of the page so that
-            // only the annular strip is visible (compact layout).
-            float centerXPt = pageWidthPt / 2f;
-            float centerYPt = MarginPt + topReservePt - topFromCtrCm * PtPerCm;
+            // Ring centre in PDF page coordinates (ring centre is below the segment)
+            float cx     = leftResrvPt + segWidthCm * PtPerCm / 2f;
+            float cyRing = MarginPt + topReservePt + (float)R_o * PtPerCm;
 
             var filePath = PdfPath(fileName);
             using var stream = File.OpenWrite(filePath);
@@ -140,31 +132,112 @@ public class PdfExportService
             using var canvas = doc.BeginPage(pageWidthPt, pageHeightPt);
             canvas.Clear(SKColors.White);
 
-            using var sectorPaint = StrokePaint("#000000", 0.75f);
-            DrawAnnularSector(canvas, centerXPt, centerYPt, outerRPt, innerRPt,
-                              90f - segAngle / 2f, segAngle, sectorPaint);
+            // — Wood fill —
+            using var fillPaint = new SKPaint { Color = SKColor.Parse("#D4A96A"), IsAntialias = true };
+            var fillPath = BuildRingSegmentPath(cx, cyRing, (float)R_o * PtPerCm, (float)R_i * PtPerCm, halfAngleRad);
+            canvas.DrawPath(fillPath, fillPaint);
 
-            // Radial dimension label on the right edge, mid-radial position
-            float rightEdgeRad = (90f + segAngle / 2f) * (float)Math.PI / 180f;
-            float midRPt = (innerRPt + outerRPt) / 2f;
-            using var dimFont = TextPaint("#CC0000", 7f);
-            canvas.DrawText($"H = {ringData.RadialEdgeLength:F1} cm",
-                centerXPt + midRPt * (float)Math.Cos(rightEdgeRad) + 3f,
-                centerYPt + midRPt * (float)Math.Sin(rightEdgeRad), dimFont);
+            // — Outline —
+            using var outlinePaint = StrokePaint("#000000", 0.85f);
+            canvas.DrawPath(fillPath, outlinePaint);
 
-            // Title immediately above inner arc
-            float titleY = MarginPt + topReservePt - titleGapPt;
-            int segCount = Math.Max(3, (int)Math.Round(360.0 / segAngle));
+            // — Dimension lines —
+            DrawRingSegmentDimensions(canvas, ringData, cx, cyRing, halfAngleRad, sinHalf, cosHalf);
+
+            // — Title (above outer arc top) —
+            float outerTopY = cyRing - (float)R_o * PtPerCm;
+            int n = (int)Math.Round(360.0 / ringData.SegmentAngle);
             using var titleFont = TextPaint("#000000", titleSizePt);
-            string title = $"Ring  ·  {segCount} segments  ·  Scale 1:1";
-            canvas.DrawText(title, centerXPt - titleFont.MeasureText(title) / 2f, titleY, titleFont);
+            string title = $"Ring Segment  ·  {n} pieces  ·  θ = {halfAngleDeg:F1}°  ·  Scale 1:1";
+            canvas.DrawText(title, cx - titleFont.MeasureText(title) / 2f,
+                            outerTopY - titleGapPt, titleFont);
 
+            // — Scale bar —
             DrawScaleBar(canvas, pageWidthPt, pageHeightPt);
 
             doc.EndPage();
             doc.Close();
             return filePath;
         });
+    }
+
+    /// <summary>Builds one ring segment path in the given coordinate space.</summary>
+    private static SKPath BuildRingSegmentPath(float cx, float cyRing, float roPt, float riPt, double halfRad,
+                                               int steps = 80)
+    {
+        var path = new SKPath();
+
+        // Outer arc: angle sweeps from -halfRad to +halfRad (left to right through topmost point)
+        for (int i = 0; i <= steps; i++)
+        {
+            double a = -halfRad + i * 2.0 * halfRad / steps;
+            float px = cx     + roPt * (float)Math.Sin(a);
+            float py = cyRing - roPt * (float)Math.Cos(a);
+            if (i == 0) path.MoveTo(px, py); else path.LineTo(px, py);
+        }
+
+        // Inner arc: angle sweeps from +halfRad to -halfRad (right to left through topmost inner point)
+        for (int i = 0; i <= steps; i++)
+        {
+            double a = halfRad - i * 2.0 * halfRad / steps;
+            float px = cx     + riPt * (float)Math.Sin(a);
+            float py = cyRing - riPt * (float)Math.Cos(a);
+            path.LineTo(px, py);
+        }
+
+        path.Close();
+        return path;
+    }
+
+    private static void DrawRingSegmentDimensions(SKCanvas canvas, SegmentedRingOutput data,
+        float cx, float cyRing, double halfRad, double sinHalf, double cosHalf)
+    {
+        float roPt = (float)data.OuterRadius * PtPerCm;
+        float riPt = (float)data.InnerRadius * PtPerCm;
+
+        // Key points
+        float outerLeftX  = cx - roPt * (float)sinHalf;
+        float outerRightX = cx + roPt * (float)sinHalf;
+        float outerY      = cyRing - roPt * (float)cosHalf;   // Y of outer corners
+        float outerTopY   = cyRing - roPt;                    // topmost outer point
+
+        float innerLeftX  = cx - riPt * (float)sinHalf;
+        float innerRightX = cx + riPt * (float)sinHalf;
+        float innerY      = cyRing - riPt * (float)cosHalf;   // Y of inner corners (bottommost)
+
+        using var dimRed  = StrokePaint("#CC0000", 0.5f, new[] { 2.5f, 1.8f });
+        using var dimBlue = StrokePaint("#0055AA", 0.5f, new[] { 2.5f, 1.8f });
+        using var textRed  = TextPaint("#CC0000",  6.5f);
+        using var textBlue = TextPaint("#0055AA",  6.5f);
+        using var textGrn  = TextPaint("#336600",  6.5f);
+
+        // — Lo: horizontal dimension arrow above outer arc —
+        float loY = outerTopY - 10f;
+        canvas.DrawLine(outerLeftX,  loY, outerRightX, loY, dimRed);
+        canvas.DrawLine(outerLeftX,  loY - 3, outerLeftX,  outerY, dimRed);
+        canvas.DrawLine(outerRightX, loY - 3, outerRightX, outerY, dimRed);
+        string loTxt = $"Lo = {data.OuterEdgeLength:F2} cm";
+        canvas.DrawText(loTxt, cx - textRed.MeasureText(loTxt) / 2f, loY - 2f, textRed);
+
+        // — Li: horizontal dimension arrow below inner arc —
+        float liY = innerY + 10f;
+        canvas.DrawLine(innerLeftX,  liY, innerRightX, liY, dimRed);
+        canvas.DrawLine(innerLeftX,  innerY, innerLeftX,  liY + 3, dimRed);
+        canvas.DrawLine(innerRightX, innerY, innerRightX, liY + 3, dimRed);
+        string liTxt = $"Li = {data.InnerEdgeLength:F2} cm";
+        canvas.DrawText(liTxt, cx - textRed.MeasureText(liTxt) / 2f, liY + 9f, textRed);
+
+        // — W: vertical dimension on right side —
+        float wX = outerRightX + 14f;
+        canvas.DrawLine(wX, outerY, wX, innerY, dimBlue);
+        canvas.DrawLine(outerRightX, outerY, wX + 3f, outerY, dimBlue);
+        canvas.DrawLine(outerRightX, innerY, wX + 3f, innerY, dimBlue);
+        canvas.DrawText($"W = {data.RadialEdgeLength:F2} cm",
+            wX + 4f, (outerY + innerY) / 2f, textBlue);
+
+        // — θ at the upper-left corner —
+        canvas.DrawText($"θ = {data.MiterAngle:F1}°",
+            outerLeftX - 3f, outerY + 8f, textGrn);
     }
 
     // ─── Cushion (tiled A4 pages at 1:1 scale) ────────────────────────────────
@@ -298,24 +371,6 @@ public class PdfExportService
         // "W = x.x cm" — below horizontal line, centred
         string wText = $"W = {petalData.PetalWidth:F1} cm";
         canvas.DrawText(wText, centerXPt - textPaint.MeasureText(wText) / 2f, midY + 9f, textPaint);
-    }
-
-    private static void DrawAnnularSector(SKCanvas canvas,
-        float cx, float cy, float outerR, float innerR,
-        float startAngle, float sweepAngle, SKPaint paint)
-    {
-        float startRad = startAngle * (float)Math.PI / 180f;
-        float endRad   = (startAngle + sweepAngle) * (float)Math.PI / 180f;
-
-        var path = new SKPath();
-        path.MoveTo(cx + outerR * (float)Math.Cos(startRad), cy + outerR * (float)Math.Sin(startRad));
-        path.ArcTo(new SKRect(cx - outerR, cy - outerR, cx + outerR, cy + outerR),
-                   startAngle, sweepAngle, false);
-        path.LineTo(cx + innerR * (float)Math.Cos(endRad), cy + innerR * (float)Math.Sin(endRad));
-        path.ArcTo(new SKRect(cx - innerR, cy - innerR, cx + innerR, cy + innerR),
-                   startAngle + sweepAngle, -sweepAngle, false);
-        path.Close();
-        canvas.DrawPath(path, paint);
     }
 
     /// <summary>Draws a "| 1 cm |" scale bar in the bottom-right corner.</summary>

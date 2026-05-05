@@ -10,7 +10,7 @@
             <!-- Page Header -->
             <VerticalStackLayout Spacing="2" Margin="0,4,0,8">
                 <Label Text="Segmented Ring Calculator" Style="{StaticResource PageTitle}" />
-                <Label Text="Generate donut-shaped fabric ring cutting patterns" Style="{StaticResource PageSubtitle}" />
+                <Label Text="Calculate wood ring segment cutting templates" Style="{StaticResource PageSubtitle}" />
             </VerticalStackLayout>
 
             <!-- Parameters Card -->
