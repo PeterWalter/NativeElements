@@ -42,41 +42,32 @@ public class RingDrawable : IDrawable
         double boardWidthCm = (d.UserBoardWidthUsed > 0 && d.UserBoardWidthUsed >= minBW)
                               ? d.UserBoardWidthUsed : minBW;
 
-        const float padTopBase = 56f;   // room for title + legend above board
-        const float padBottom  = 44f;
-        const float padLeft    = 96f;
-        const float padRight   = 160f;
+        const float padTop    = 56f;   // room for title above segment
+        const float padBottom = 44f;
+        const float padLeft   = 50f;
+        const float padRight  = 50f;
 
         float availW = dirtyRect.Width  - padLeft  - padRight;
-        float availH = dirtyRect.Height - padTopBase - padBottom;
+        float availH = dirtyRect.Height - padTop - padBottom;
         if (availW <= 10 || availH <= 10) return;
 
-        // Scale: fit board (Lo × boardWidthCm) into the available area
+        // Scale: fit trapezoid (Lo × boardWidthCm) into the available area
         float s      = (float)Math.Min(availW / Lo, availH / boardWidthCm);
-        float boardW = (float)Lo * s;
-        float boardH = (float)boardWidthCm * s;
         float roPx   = (float)R_o * s;
         float riPx   = (float)R_i * s;
-
-        // Board top; segment centered on board
-        float bx     = padLeft;
-        float by     = padTopBase;
-        float cx     = bx + boardW / 2f;
-        // ring centre: segment is centered vertically on the board
-        // segment spans from (ringCy - roPx) to (ringCy - riPx·cosA)
-        // centered means: ringCy - (roPx + riPx·cosA)/2 = by + boardH/2
-        float ringCy = by + boardH / 2f + (roPx + riPx * (float)cosA) / 2f;
+        
+        // Center trapezoid horizontally and vertically
+        float cx     = padLeft + availW / 2f;
+        float ringCy = padTop + availH / 2f + (roPx + riPx * (float)cosA) / 2f;
 
         DrawGrid(canvas, dirtyRect, s);
-        DrawBoardWaste(canvas, bx, by, boardW, boardH);
         DrawSegmentFill(canvas, cx, ringCy, roPx, riPx, alpha);
-        DrawBoardOutline(canvas, bx, by, boardW, boardH);
         DrawSegmentOutline(canvas, cx, ringCy, roPx, riPx, alpha);
         DrawOuterArc(canvas, cx, ringCy, roPx, alpha);
         DrawInnerArc(canvas, cx, ringCy, riPx, alpha);
         DrawMiterAngleGuides(canvas, cx, ringCy, roPx, riPx, alpha, (float)sinA, (float)cosA);
-        DrawAnnotations(canvas, bx, by, boardW, boardH, cx, ringCy, s, alpha,
-                        sinA, cosA, roPx, riPx, boardWidthCm, minBW);
+        DrawAnnotations(canvas, cx, ringCy, s, alpha, sinA, cosA, roPx, riPx, 
+                        padLeft, padTop, availW, availH, minBW);
     }
 
     // ── Segment path ──────────────────────────────────────────────────────────
@@ -116,36 +107,10 @@ public class RingDrawable : IDrawable
 
     // ── Draw layers ───────────────────────────────────────────────────────────
 
-    private static void DrawBoardWaste(ICanvas canvas, float bx, float by, float boardW, float boardH)
-    {
-        canvas.FillColor = Color.FromArgb("#E8624A");
-        canvas.FillRectangle(bx, by, boardW, boardH);
-        canvas.StrokeColor = Color.FromArgb("#C43620");
-        canvas.StrokeSize  = 0.8f;
-        canvas.StrokeDashPattern = null;
-        for (float d = -boardH; d <= boardW + boardH; d += 10f)
-        {
-            float x1 = bx + d, y1 = by;
-            float x2 = bx + d + boardH, y2 = by + boardH;
-            if (x1 < bx)          { y1 += bx - x1;              x1 = bx;          }
-            if (x2 > bx + boardW) { y2 -= x2 - (bx + boardW);   x2 = bx + boardW; }
-            if (x1 <= x2 && y1 <= y2) canvas.DrawLine(x1, y1, x2, y2);
-        }
-    }
-
     private static void DrawSegmentFill(ICanvas canvas, float cx, float ringCy, float roPx, float riPx, double alpha)
     {
         canvas.FillColor = Color.FromArgb("#D4A96A");
         canvas.FillPath(BuildSegmentPath(cx, ringCy, roPx, riPx, alpha));
-    }
-
-    private static void DrawBoardOutline(ICanvas canvas, float bx, float by, float boardW, float boardH)
-    {
-        canvas.StrokeColor       = Colors.Black;
-        canvas.StrokeSize        = 1f;
-        canvas.StrokeDashPattern = new float[] { 5, 3 };
-        canvas.DrawRectangle(bx, by, boardW, boardH);
-        canvas.StrokeDashPattern = null;
     }
 
     /// <summary>
@@ -297,135 +262,93 @@ public class RingDrawable : IDrawable
     }
 
 
-    private void DrawAnnotations(ICanvas canvas, float bx, float by, float boardW, float boardH,
-        float cx, float ringCy, float s, double alpha, double sinA, double cosA,
-        float roPx, float riPx, double boardWidthCm, double minBW)
+    private void DrawAnnotations(ICanvas canvas, float cx, float ringCy, float s, double alpha, 
+        double sinA, double cosA, float roPx, float riPx, float padLeft, float padTop, 
+        float availW, float availH, double minBW)
     {
         var d    = RingData!;
         int n    = (int)Math.Round(360.0 / d.SegmentAngle);
 
-        float boardRight  = bx + boardW;
-        float boardBottom = by + boardH;
+        // Key segment coordinates
+        float outerLeftX  = cx - roPx * (float)sinA;
+        float outerRightX = cx + roPx * (float)sinA;
+        float outerY      = ringCy - roPx * (float)cosA;
+        
+        float innerLeftX  = cx - riPx * (float)sinA;
+        float innerRightX = cx + riPx * (float)sinA;
+        float innerY      = ringCy - riPx * (float)cosA;
+        
+        float innerArcMidY = ringCy - riPx;  // Y of inner arc peak (bows up)
+        float midSection = (outerY + innerY) / 2f;  // vertical centre of segment body
 
-        // Key arc coordinates
-        float outerEndY   = ringCy - roPx * (float)cosA;   // Y of outer arc endpoints (below board top)
-        float outerLeftX  = cx - roPx * (float)sinA;       // same as bx
-        float outerRightX = cx + roPx * (float)sinA;       // same as boardRight
-
-        float innerChordY  = ringCy - riPx * (float)cosA;  // Y of inner arc endpoints
-        float innerArcMidY = ringCy - riPx;                 // Y of inner arc peak (bows up)
-        float innerLeftX   = cx - riPx * (float)sinA;
-        float innerRightX  = cx + riPx * (float)sinA;
-
-        float midSection = (outerEndY + innerChordY) / 2f;  // vertical centre of segment body
-
-        // ── Title / legend (above board top) ─────────────────────────────────
+        // ── Title (above segment) ──────────────────────────────────────────────
         canvas.FontSize  = 12f;
         canvas.FontColor = Colors.Black;
         canvas.DrawString("SEGMENTED RING – ONE SEGMENT (CUTTING GUIDE)",
-            cx, by - 38f, HorizontalAlignment.Center);
+            cx, padTop - 38f, HorizontalAlignment.Center);
         canvas.FontSize  = 9f;
         canvas.FontColor = Color.FromArgb("#555555");
-        canvas.DrawString("Trapezoid to cut. Red arc = outer edge curve. Blue arc = inner edge curve. Shade = waste.",
-            cx, by - 26f, HorizontalAlignment.Center);
+        canvas.DrawString("Trapezoid to cut. Red arc = outer edge curve. Blue arc = inner edge curve.",
+            cx, padTop - 26f, HorizontalAlignment.Center);
 
-        float legY = by - 11f;
-        DrawSwatch(canvas, cx - 100f, legY, "#D4A96A", "Wood to keep");
-        DrawSwatch(canvas, cx + 10f,  legY, "#E8624A", "Waste (cut off)");
+        float legY = padTop - 11f;
+        DrawSwatch(canvas, cx - 80f, legY, "#D4A96A", "Segment");
 
-        // ── Outer arc label (inside board top-corner waste areas) ─────────────
-        canvas.FontSize  = 8f;
-        canvas.FontColor = Color.FromArgb("#AA0000");
-        canvas.DrawString("← OUTER ARC CUT", bx + 4f, (by + outerEndY) / 2f, HorizontalAlignment.Left);
-
-        // ── Outer chord dim line (at outer arc endpoint level) ────────────────
+        // ── Outer edge dimension line ──────────────────────────────────────────
         canvas.StrokeColor = Color.FromArgb("#8B5E1E"); canvas.StrokeSize = 0.7f;
         canvas.StrokeDashPattern = new float[] { 3, 2 };
-        canvas.DrawLine(outerLeftX, outerEndY, outerRightX, outerEndY);
-        canvas.DrawLine(outerLeftX,  outerEndY - 5, outerLeftX,  outerEndY + 5);
-        canvas.DrawLine(outerRightX, outerEndY - 5, outerRightX, outerEndY + 5);
+        canvas.DrawLine(outerLeftX, outerY, outerRightX, outerY);
+        canvas.DrawLine(outerLeftX,  outerY - 5, outerLeftX,  outerY + 5);
+        canvas.DrawLine(outerRightX, outerY - 5, outerRightX, outerY + 5);
         canvas.StrokeDashPattern = null;
-        canvas.FontSize = 9f; canvas.FontColor = Color.FromArgb("#8B5E1E");
-        canvas.DrawString($"OUTER EDGE (Long) = {d.OuterEdgeLength:F2} cm",
-            cx, outerEndY + 9f, HorizontalAlignment.Center);
+        canvas.FontSize = 8f; canvas.FontColor = Color.FromArgb("#8B5E1E");
+        canvas.DrawString($"OUTER EDGE = {d.OuterEdgeLength:F2} cm",
+            cx, outerY + 10f, HorizontalAlignment.Center);
 
-        // ── Inner chord dim line ───────────────────────────────────────────────
-        float beY = Math.Max(by + 6f, innerArcMidY - 14f);
+        // ── Inner edge dimension line ──────────────────────────────────────────
+        float innerDimY = Math.Min(innerArcMidY - 14f, innerY - 12f);
         canvas.StrokeColor = Color.FromArgb("#8B5E1E"); canvas.StrokeSize = 0.7f;
         canvas.StrokeDashPattern = new float[] { 3, 2 };
-        canvas.DrawLine(innerLeftX,  beY, innerRightX, beY);
-        canvas.DrawLine(innerLeftX,  beY, innerLeftX,  innerChordY);
-        canvas.DrawLine(innerRightX, beY, innerRightX, innerChordY);
+        canvas.DrawLine(innerLeftX,  innerDimY, innerRightX, innerDimY);
+        canvas.DrawLine(innerLeftX,  innerDimY, innerLeftX,  innerY);
+        canvas.DrawLine(innerRightX, innerDimY, innerRightX, innerY);
         canvas.StrokeDashPattern = null;
-        canvas.FontSize = 9f; canvas.FontColor = Color.FromArgb("#8B5E1E");
-        canvas.DrawString($"INNER EDGE (Short) = {d.InnerEdgeLength:F2} cm",
-            cx, beY - 2f, HorizontalAlignment.Center);
+        canvas.FontSize = 8f; canvas.FontColor = Color.FromArgb("#8B5E1E");
+        canvas.DrawString($"INNER EDGE = {d.InnerEdgeLength:F2} cm",
+            cx, innerDimY - 2f, HorizontalAlignment.Center);
 
-        // Inner arc label
-        canvas.FontSize  = 8f;
-        canvas.FontColor = Color.FromArgb("#AA0000");
-        float innerLblY = (innerArcMidY + boardBottom) / 2f;
-        canvas.DrawString("INNER ARC CUT →", boardRight - 4f, innerLblY, HorizontalAlignment.Right);
-
-        // ── Miter angle labels (outside left) ────────────────────────────────
+        // ── Miter angle labels (left side) ────────────────────────────────────
         canvas.FontSize = 8f; canvas.FontColor = Color.FromArgb("#1A1A8C");
-        canvas.DrawString("MITER ANGLE",        bx - 92f, midSection - 16f, HorizontalAlignment.Left);
-        canvas.DrawString("Set saw to",          bx - 92f, midSection - 5f,  HorizontalAlignment.Left);
-        canvas.FontSize = 11f;
-        canvas.DrawString($"{d.MiterAngle:F0}°", bx - 92f, midSection + 6f,  HorizontalAlignment.Left);
+        float leftX = outerLeftX - 80f;
+        canvas.DrawString("MITER ANGLE",        leftX, midSection - 14f, HorizontalAlignment.Right);
+        canvas.DrawString("Set saw to",          leftX, midSection - 2f,  HorizontalAlignment.Right);
+        canvas.FontSize = 10f;
+        canvas.DrawString($"{d.MiterAngle:F0}°", leftX, midSection + 8f,  HorizontalAlignment.Right);
+        
+        // ── Miter angle labels (right side) ───────────────────────────────────
+        float rightX = outerRightX + 80f;
         canvas.FontSize = 8f;
-        canvas.DrawString("each end",            bx - 92f, midSection + 17f, HorizontalAlignment.Left);
-
-        // Miter angle labels (outside right, after board-width bracket)
-        float raX = boardRight + 70f;
-        canvas.DrawString("MITER ANGLE",        raX, midSection - 16f, HorizontalAlignment.Left);
-        canvas.DrawString("Set saw to",          raX, midSection - 5f,  HorizontalAlignment.Left);
-        canvas.FontSize = 11f;
-        canvas.DrawString($"{d.MiterAngle:F0}°", raX, midSection + 6f,  HorizontalAlignment.Left);
-        canvas.FontSize = 8f;
-        canvas.DrawString("each end",            raX, midSection + 17f, HorizontalAlignment.Left);
-
-        // ── Board Width bracket (right side) ─────────────────────────────────
-        float bwX = boardRight + 12f;
-        canvas.StrokeColor = Color.FromArgb("#444444"); canvas.StrokeSize = 0.8f;
-        canvas.DrawLine(bwX, by, bwX, boardBottom);
-        canvas.DrawLine(boardRight, by,          bwX + 4, by);
-        canvas.DrawLine(boardRight, boardBottom, bwX + 4, boardBottom);
-        canvas.FontSize = 9f; canvas.FontColor = Color.FromArgb("#444444");
-        float bwMid = (by + boardBottom) / 2f;
-        canvas.DrawString("BOARD WIDTH",  bwX + 6f, bwMid - 12f, HorizontalAlignment.Left);
-        string bwVal = d.UserBoardWidthUsed > 0
-            ? $"{boardWidthCm:F2} cm"
-            : $"{minBW:F2} cm (min)";
-        canvas.DrawString(bwVal,          bwX + 6f, bwMid,       HorizontalAlignment.Left);
-
-        // Dashed minimum-depth line when board is wider than minimum
-        if (boardWidthCm > minBW + 0.01)
-        {
-            float minY = by + (float)minBW * s;
-            canvas.StrokeColor = Color.FromArgb("#AA5500"); canvas.StrokeSize = 0.7f;
-            canvas.StrokeDashPattern = new float[] { 4, 2 };
-            canvas.DrawLine(bx, minY, boardRight, minY);
-            canvas.StrokeDashPattern = null;
-            canvas.FontSize = 8f; canvas.FontColor = Color.FromArgb("#AA5500");
-            canvas.DrawString($"─ min {minBW:F2} cm", boardRight + 4f, minY + 4f, HorizontalAlignment.Left);
-        }
+        canvas.DrawString("MITER ANGLE",        rightX, midSection - 14f, HorizontalAlignment.Left);
+        canvas.DrawString("Set saw to",          rightX, midSection - 2f,  HorizontalAlignment.Left);
+        canvas.FontSize = 10f;
+        canvas.DrawString($"{d.MiterAngle:F0}°", rightX, midSection + 8f,  HorizontalAlignment.Left);
 
         // ── Footer ────────────────────────────────────────────────────────────
         string footer = $"{n} pieces total  ·  θ = {d.MiterAngle:F1}°  ·  Min board width: {minBW:F2} cm";
         if (d.SegmentsPerBoard > 0)
-            footer += $"  ·  {d.SegmentsPerBoard} per board (offcut {d.BoardOffcut:F1} cm)";
-        canvas.FontSize = 9f; canvas.FontColor = Colors.Black;
-        canvas.DrawString(footer, cx, boardBottom + 12f, HorizontalAlignment.Center);
+            footer += $"  ·  {d.SegmentsPerBoard} per board";
+        canvas.FontSize = 8f; canvas.FontColor = Colors.Black;
+        float footerY = padTop + availH + 12f;
+        canvas.DrawString(footer, cx, footerY, HorizontalAlignment.Center);
 
         // ── Scale bar ─────────────────────────────────────────────────────────
-        float sbY = boardBottom + 26f;
+        float sbY = footerY + 14f;
         canvas.StrokeColor = Colors.Gray; canvas.StrokeSize = 0.8f; canvas.StrokeDashPattern = null;
-        canvas.DrawLine(bx, sbY, bx + s, sbY);
-        canvas.DrawLine(bx,     sbY - 3, bx,     sbY + 3);
-        canvas.DrawLine(bx + s, sbY - 3, bx + s, sbY + 3);
-        canvas.FontSize = 8f; canvas.FontColor = Colors.Gray;
-        canvas.DrawString("| 1 cm |", bx + s / 2f, sbY + 10f, HorizontalAlignment.Center);
+        canvas.DrawLine(padLeft, sbY, padLeft + s, sbY);
+        canvas.DrawLine(padLeft,     sbY - 3, padLeft,     sbY + 3);
+        canvas.DrawLine(padLeft + s, sbY - 3, padLeft + s, sbY + 3);
+        canvas.FontSize = 7f; canvas.FontColor = Colors.Gray;
+        canvas.DrawString("1 cm", padLeft + s / 2f, sbY + 8f, HorizontalAlignment.Center);
     }
 
     private static void DrawSwatch(ICanvas canvas, float x, float y, string hex, string label)

@@ -118,20 +118,18 @@ public class PdfExportService
             float boardWPt = Lo           * PtPerCm;
             float boardHPt = boardWidthCm * PtPerCm;
 
-            // Page layout: board top = outer arc peak (no sagOPt offset above board)
+            // Page layout: trapezoid centered with title above
             const float titleAreaPt  = 60f;
             const float botReservePt = 48f;
-            const float leftResvPt   = 68f;
-            const float rightResvPt  = 130f;
+            const float leftResvPt   = 50f;
+            const float rightResvPt  = 50f;
 
             float pageWidthPt  = boardWPt + leftResvPt + rightResvPt;
             float pageHeightPt = boardHPt + MarginPt + titleAreaPt + botReservePt;
 
-            float bLeft  = leftResvPt;
-            float bTop   = MarginPt + titleAreaPt;
-            float cx     = bLeft + boardWPt / 2f;
-            // ring centre: segment is centered vertically on the board
-            float ringCy = bTop + boardHPt / 2f + ((float)R_o * PtPerCm + (float)R_i * (float)cosA * PtPerCm) / 2f;
+            float cx     = leftResvPt + boardWPt / 2f;
+            // ring centre: segment is centered vertically
+            float ringCy = MarginPt + titleAreaPt + boardHPt / 2f + ((float)R_o * PtPerCm + (float)R_i * (float)cosA * PtPerCm) / 2f;
 
             var filePath = PdfPath(fileName);
             using var stream = File.OpenWrite(filePath);
@@ -139,44 +137,27 @@ public class PdfExportService
             using var canvas = doc.BeginPage(pageWidthPt, pageHeightPt);
             canvas.Clear(SKColors.White);
 
-            // 1. Board waste fill + hatching
-            using var wasteFill = new SKPaint { Color = SKColor.Parse("#E8624A"), IsAntialias = true };
-            canvas.DrawRect(SKRect.Create(bLeft, bTop, boardWPt, boardHPt), wasteFill);
-            using var hatchPaint = StrokePaint("#C43620", 0.5f);
-            for (float d = -boardHPt; d <= boardWPt + boardHPt; d += 8f)
-            {
-                float x1 = bLeft + d, y1 = bTop;
-                float x2 = bLeft + d + boardHPt, y2 = bTop + boardHPt;
-                if (x1 < bLeft)            { y1 += bLeft - x1; x1 = bLeft; }
-                if (x2 > bLeft + boardWPt) { y2 -= x2 - (bLeft + boardWPt); x2 = bLeft + boardWPt; }
-                if (x1 <= x2 && y1 <= y2) canvas.DrawLine(x1, y1, x2, y2, hatchPaint);
-            }
-
-            // 2. Segment fill (outer arc + miter sides + inner arc — fully contained in board)
+            // 1. Segment fill (trapezoid)
             var segPath = BuildBoardViewSegmentPath(cx, ringCy,
                 (float)R_o * PtPerCm, (float)R_i * PtPerCm, halfAngleRad);
             using var woodFill = new SKPaint { Color = SKColor.Parse("#D4A96A"), IsAntialias = true };
             canvas.DrawPath(segPath, woodFill);
 
-            // 3. Board outline (dashed)
-            using var boardOutline = StrokePaint("#000000", 0.6f, new[] { 4f, 2.5f });
-            canvas.DrawRect(SKRect.Create(bLeft, bTop, boardWPt, boardHPt), boardOutline);
-
-            // 4. Segment outline (solid — includes outer arc as top boundary)
+            // 2. Segment outline (solid black)
             using var segOutline = StrokePaint("#000000", 0.85f);
             canvas.DrawPath(segPath, segOutline);
 
-            // 4b. Miter angle guide lines
+            // 3. Miter angle guide lines
             DrawRingMiterAngleGuides(canvas, cx, ringCy,
                 (float)R_o * PtPerCm, (float)R_i * PtPerCm, halfAngleRad, (float)sinA, (float)cosA);
 
-            // 4c. Outer and inner arc reference guides
+            // 4. Outer and inner arc reference guides
             DrawPdfOuterArc(canvas, cx, ringCy, (float)R_o * PtPerCm, halfAngleRad);
             DrawPdfInnerArc(canvas, cx, ringCy, (float)R_i * PtPerCm, halfAngleRad);
 
             // 5. Annotations
-            DrawRingBoardAnnotations(canvas, ringData, cx, bLeft, bTop, boardWPt, boardHPt,
-                ringCy, halfAngleRad, sinA, cosA, boardWidthCm, minBW);
+            DrawRingBoardAnnotations(canvas, ringData, cx, MarginPt + titleAreaPt, cx - boardWPt / 2f,
+                ringCy, halfAngleRad, sinA, cosA, minBW);
 
             // 7. Scale bar
             DrawScaleBar(canvas, pageWidthPt, pageHeightPt);
@@ -292,111 +273,75 @@ public class PdfExportService
     }
 
     private static void DrawRingBoardAnnotations(SKCanvas canvas, SegmentedRingOutput data,
-        float cx, float bLeft, float bTop, float boardWPt, float boardHPt, float ringCy,
-        double halfRad, double sinA, double cosA, float boardWidthCm, float minBW)
+        float cx, float titleY, float segLeft, float ringCy, double halfRad, 
+        double sinA, double cosA, float minBW)
     {
         float roPt = (float)data.OuterRadius * PtPerCm;
         float riPt = (float)data.InnerRadius * PtPerCm;
         int   n    = (int)Math.Round(360.0 / data.SegmentAngle);
 
-        float boardRight   = bLeft + boardWPt;
-        float boardBottom  = bTop  + boardHPt;
-
-        // Key arc coordinates (outer arc peak = bTop)
-        float outerEndY   = ringCy - roPt * (float)cosA;   // Y of outer arc endpoints (below board top)
+        // Key segment coordinates
         float outerLeftX  = cx - roPt * (float)sinA;
         float outerRightX = cx + roPt * (float)sinA;
-        float innerChordY  = ringCy - riPt * (float)cosA;
+        float outerY      = ringCy - roPt * (float)cosA;
+        
+        float innerLeftX  = cx - riPt * (float)sinA;
+        float innerRightX = cx + riPt * (float)sinA;
+        float innerY      = ringCy - riPt * (float)cosA;
+        
         float innerArcMidY = ringCy - riPt;
-        float innerLeftX   = cx - riPt * (float)sinA;
-        float innerRightX  = cx + riPt * (float)sinA;
-        float midSection   = (outerEndY + innerChordY) / 2f;
+        float midSection = (outerY + innerY) / 2f;
 
-        using var dimLine = StrokePaint("#555555", 0.5f);
-        using var dimDash = StrokePaint("#8B5E1E", 0.5f, new[] { 3f, 2f });
         using var blk10  = TextPaint("#000000", 10f);
-        using var blk8   = TextPaint("#000000", 8f);
         using var blk7   = TextPaint("#000000", 7f);
         using var gry7   = TextPaint("#555555", 7f);
         using var brn7   = TextPaint("#8B5E1E", 7f);
         using var nvy7   = TextPaint("#1A1A8C", 7f);
         using var nvy9   = TextPaint("#1A1A8C", 9f);
-        using var red7   = TextPaint("#AA0000", 7f);
+        using var dimDash = StrokePaint("#8B5E1E", 0.5f, new[] { 3f, 2f });
 
-        // ── Title (above board top = outer arc peak) ───────────────────────────
+        // ── Title (above segment) ──────────────────────────────────────────────
         string titleStr = "SEGMENTED RING – ONE SEGMENT (CUTTING GUIDE)";
-        canvas.DrawText(titleStr, cx - blk10.MeasureText(titleStr) / 2f, bTop - 30f, blk10);
-        string subStr = "Outer arc peak at board top edge. Board shows waste areas.";
-        canvas.DrawText(subStr, cx - gry7.MeasureText(subStr) / 2f, bTop - 18f, gry7);
+        canvas.DrawText(titleStr, cx - blk10.MeasureText(titleStr) / 2f, titleY - 30f, blk10);
+        string subStr = "Trapezoid to cut. Red arc = outer curve. Blue arc = inner curve.";
+        canvas.DrawText(subStr, cx - gry7.MeasureText(subStr) / 2f, titleY - 18f, gry7);
 
         // Legend
-        float legY = bTop - 5f;
-        DrawPdfSwatch(canvas, cx - 90f, legY, "#D4A96A", "Wood to keep (final segment)", blk7);
-        DrawPdfSwatch(canvas, cx + 20f, legY, "#E8624A", "Wood to cut out (waste)", blk7);
+        float legY = titleY - 5f;
+        DrawPdfSwatch(canvas, cx - 50f, legY, "#D4A96A", "Wood segment", blk7);
 
-        // Outer arc label (inside top-corner waste area)
-        string outerArcStr = "← OUTER ARC CUT (outer surface)";
-        canvas.DrawText(outerArcStr, bLeft + 4f, (bTop + outerEndY) / 2f, red7);
+        // ── Outer edge dimension line ──────────────────────────────────────────
+        canvas.DrawLine(outerLeftX,  outerY, outerRightX, outerY, dimDash);
+        canvas.DrawLine(outerLeftX,  outerY - 4f, outerLeftX,  outerY + 4f, dimDash);
+        canvas.DrawLine(outerRightX, outerY - 4f, outerRightX, outerY + 4f, dimDash);
+        string ocStr = $"OUTER EDGE = {data.OuterEdgeLength:F2} cm";
+        canvas.DrawText(ocStr, cx - brn7.MeasureText(ocStr) / 2f, outerY + 8f, brn7);
 
-        // ── Outer chord dim line (at outer arc endpoint level) ─────────────────
-        canvas.DrawLine(outerLeftX,  outerEndY, outerRightX, outerEndY, dimDash);
-        canvas.DrawLine(outerLeftX,  outerEndY - 4f, outerLeftX,  outerEndY + 4f, dimDash);
-        canvas.DrawLine(outerRightX, outerEndY - 4f, outerRightX, outerEndY + 4f, dimDash);
-        string ocStr = $"OUTER CHORD (Lo) = {data.OuterEdgeLength:F2} cm";
-        canvas.DrawText(ocStr, cx - brn7.MeasureText(ocStr) / 2f, outerEndY + 8f, brn7);
+        // ── Inner edge dimension line ──────────────────────────────────────────
+        float innerDimY = Math.Min(innerArcMidY - 12f, innerY - 8f);
+        canvas.DrawLine(innerLeftX,  innerDimY, innerRightX, innerDimY, dimDash);
+        canvas.DrawLine(innerLeftX,  innerDimY, innerLeftX,  innerY, dimDash);
+        canvas.DrawLine(innerRightX, innerDimY, innerRightX, innerY, dimDash);
+        string beStr = $"INNER EDGE = {data.InnerEdgeLength:F2} cm";
+        canvas.DrawText(beStr, cx - brn7.MeasureText(beStr) / 2f, innerDimY - 2f, brn7);
 
-        // ── Inner chord dim line ────────────────────────────────────────────────
-        float beY = Math.Max(bTop + 5f, innerArcMidY - 12f);
-        canvas.DrawLine(innerLeftX,  beY, innerRightX, beY, dimDash);
-        canvas.DrawLine(innerLeftX,  beY, innerLeftX,  innerChordY, dimDash);
-        canvas.DrawLine(innerRightX, beY, innerRightX, innerChordY, dimDash);
-        string beStr = $"INNER CHORD (Li) = {data.InnerEdgeLength:F2} cm";
-        canvas.DrawText(beStr, cx - brn7.MeasureText(beStr) / 2f, beY - 2f, brn7);
+        // ── Miter angle labels (left side) ─────────────────────────────────────
+        float leftX = outerLeftX - 50f;
+        canvas.DrawText("MITER ANGLE",        leftX, midSection - 12f, nvy7);
+        canvas.DrawText("Set saw to",          leftX, midSection - 2f,  nvy7);
+        canvas.DrawText($"{data.MiterAngle:F0}°", leftX, midSection + 6f,  nvy9);
 
-        // Inner arc label
-        float innerLblY = (innerArcMidY + boardBottom) / 2f;
-        canvas.DrawText("INNER ARC CUT →", boardRight - red7.MeasureText("INNER ARC CUT →") - 4f, innerLblY, red7);
-
-        // ── Angle labels (outside left) ───────────────────────────────────────
-        canvas.DrawText("MITER ANGLE",                   bLeft - 64f, midSection - 14f, nvy7);
-        canvas.DrawText("Set saw to",                    bLeft - 64f, midSection - 4f,  nvy7);
-        canvas.DrawText($"{data.MiterAngle:F0}°",        bLeft - 64f, midSection + 6f,  nvy9);
-        canvas.DrawText("each end",                      bLeft - 64f, midSection + 16f, nvy7);
-
-        float raX = boardRight + 70f;
-        canvas.DrawText("MITER ANGLE",                   raX, midSection - 14f, nvy7);
-        canvas.DrawText("Set saw to",                    raX, midSection - 4f,  nvy7);
-        canvas.DrawText($"{data.MiterAngle:F0}°",        raX, midSection + 6f,  nvy9);
-        canvas.DrawText("each end",                      raX, midSection + 16f, nvy7);
-
-        // ── Board Width bracket (right side) ──────────────────────────────────
-        float bwX = boardRight + 12f;
-        using var bwLine = StrokePaint("#444444", 0.5f);
-        canvas.DrawLine(bwX, bTop, bwX, boardBottom, bwLine);
-        canvas.DrawLine(boardRight, bTop,        bwX + 4f, bTop, bwLine);
-        canvas.DrawLine(boardRight, boardBottom, bwX + 4f, boardBottom, bwLine);
-        float bwMidY = (bTop + boardBottom) / 2f;
-        canvas.DrawText("BOARD WIDTH",  bwX + 6f, bwMidY - 8f, gry7);
-        string bwVal = data.UserBoardWidthUsed > 0
-            ? $"{boardWidthCm:F2} cm"
-            : $"{minBW:F2} cm (min)";
-        canvas.DrawText(bwVal,          bwX + 6f, bwMidY + 2f, gry7);
-
-        // Minimum board depth dashed line (if board wider than min)
-        if (boardWidthCm > minBW + 0.01f)
-        {
-            float minY = bTop + minBW * PtPerCm;
-            using var minDash = StrokePaint("#AA5500", 0.5f, new[] { 4f, 2f });
-            canvas.DrawLine(bLeft, minY, boardRight, minY, minDash);
-            string minStr = $"─ min {minBW:F2} cm";
-            canvas.DrawText(minStr, boardRight + 4f, minY + 4f, gry7);
-        }
+        // ── Miter angle labels (right side) ────────────────────────────────────
+        float rightX = outerRightX + 50f;
+        canvas.DrawText("MITER ANGLE",        rightX, midSection - 12f, nvy7);
+        canvas.DrawText("Set saw to",          rightX, midSection - 2f,  nvy7);
+        canvas.DrawText($"{data.MiterAngle:F0}°", rightX, midSection + 6f,  nvy9);
 
         // ── Footer ────────────────────────────────────────────────────────────
-        string footer = $"Ring: {n} segments  ·  θ = {data.MiterAngle:F1}°  ·  Min board width: {minBW:F2} cm  ·  Scale 1:1";
+        string footer = $"{n} pieces total  ·  θ = {data.MiterAngle:F1}°  ·  Min board: {minBW:F2} cm";
         if (data.SegmentsPerBoard > 0)
-            footer += $"  ·  {data.SegmentsPerBoard} per board  ·  offcut {data.BoardOffcut:F1} cm";
-        canvas.DrawText(footer, cx - gry7.MeasureText(footer) / 2f, boardBottom + 16f, gry7);
+            footer += $"  ·  {data.SegmentsPerBoard} per board";
+        canvas.DrawText(footer, cx - blk7.MeasureText(footer) / 2f, titleY + 100f, blk7);
     }
 
     private static void DrawPdfSwatch(SKCanvas canvas, float x, float y, string hex, string label, SKPaint textPaint)
