@@ -180,24 +180,25 @@ public class PdfExportService
     }
 
     /// <summary>
-    /// Closed segment path: straight outer chord (tan formula) → right miter → inner arc (sin formula) → left miter (close).
-    /// Matches the woodturning reference calculator formulas.
+    /// Closed segment path: outer arc → right miter → inner arc → left miter (close).
+    /// Both outer and inner edges are circular arcs centered at ring centre.
     /// </summary>
     private static SKPath BuildBoardViewSegmentPath(float cx, float ringCy,
         float roPt, float riPt, double halfRad, int steps = 80)
     {
         var path = new SKPath();
 
-        // Outer chord: straight line from left to right using tan formula for X
-        float outerLeftX  = cx - roPt * (float)Math.Tan(halfRad);
-        float outerLeftY  = ringCy - roPt * (float)Math.Cos(halfRad);
-        float outerRightX = cx + roPt * (float)Math.Tan(halfRad);
-        float outerRightY = ringCy - roPt * (float)Math.Cos(halfRad);
+        // Outer arc: t from −α (left endpoint) → 0 (peak) → +α (right endpoint)
+        for (int i = 0; i <= steps; i++)
+        {
+            double t  = -halfRad + i * 2.0 * halfRad / steps;
+            float  px = cx + roPt * (float)Math.Sin(t);
+            float  py = ringCy - roPt * (float)Math.Cos(t);
+            if (i == 0) path.MoveTo(px, py); else path.LineTo(px, py);
+        }
 
-        path.MoveTo(outerLeftX, outerLeftY);
-        path.LineTo(outerRightX, outerRightY);
-
-        // Inner arc: t from +α → 0 → −α using sin formula (first LineTo = right miter; Close = left miter)
+        // Inner arc: t from +α (right endpoint) → 0 (peak) → −α (left endpoint)
+        // First LineTo becomes the right miter cut; Close = left miter cut
         for (int i = 0; i <= steps; i++)
         {
             double t  = halfRad - i * 2.0 * halfRad / steps;
