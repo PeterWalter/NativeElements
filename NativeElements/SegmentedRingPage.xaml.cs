@@ -12,11 +12,14 @@ namespace NativeElements;
 public partial class SegmentedRingPage : ContentPage
 {
     private RingDrawable? _ringDrawable;
+    private RingAssemblyDrawable? _assemblyDrawable;
+    private bool _showAssembly = false;
 
     public SegmentedRingPage()
     {
         InitializeComponent();
         _ringDrawable = new RingDrawable();
+        _assemblyDrawable = new RingAssemblyDrawable();
         RingPreview.Drawable = _ringDrawable;
     }
 
@@ -59,10 +62,21 @@ public partial class SegmentedRingPage : ContentPage
             var output = SegmentedRingMathService.CalculateSegment(input);
             _lastRingOutput = output;
 
-            // Update drawable and refresh preview
+            // Update both drawables with new data
             if (_ringDrawable != null)
             {
                 _ringDrawable.RingData = output;
+            }
+            if (_assemblyDrawable != null)
+            {
+                _assemblyDrawable.RingData = output;
+            }
+
+            // Show single segment view by default after calculation
+            _showAssembly = false;
+            if (_ringDrawable != null)
+            {
+                RingPreview.Drawable = _ringDrawable;
                 RingPreview.Invalidate();
             }
 
@@ -167,5 +181,29 @@ public partial class SegmentedRingPage : ContentPage
             RingResultLabel.Text = $"Print error: {ex.Message}";
         }
     }
+
+    private void OnToggleViewClicked(object? sender, EventArgs e)
+    {
+        if (_lastRingOutput == null)
+        {
+            RingResultLabel.Text = "Please calculate first before toggling view.";
+            return;
+        }
+
+        _showAssembly = !_showAssembly;
+        ToggleViewButton.Text = _showAssembly ? "Show Segment" : "Show Assembly";
+        
+        if (_showAssembly && _assemblyDrawable != null)
+        {
+            RingPreview.Drawable = _assemblyDrawable;
+        }
+        else if (_ringDrawable != null)
+        {
+            RingPreview.Drawable = _ringDrawable;
+        }
+
+        RingPreview.Invalidate();
+    }
 }
+
 
