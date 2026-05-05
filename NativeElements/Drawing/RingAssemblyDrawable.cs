@@ -105,11 +105,27 @@ public class RingAssemblyDrawable : IDrawable
         path.LineTo(innerLeftX, innerLeftY);     // inner edge (shorter)
         path.Close();                            // left miter cut auto-added
 
-        // Fill segment with alternating colors for clarity
-        bool isEven = (segmentIndex % 2) == 0;
-        canvas.FillColor = isEven 
-            ? Color.FromArgb("#D4A96A")    // wood color (light tan)
-            : Color.FromArgb("#C9934C");   // darker tan for contrast
+        // Fill segment with colors: first yellow, second green, rest alternating tan
+        int colorChoice;
+        if (segmentIndex == 0)
+        {
+            canvas.FillColor = Color.FromArgb("#FFFF00");  // Yellow for first segment
+            colorChoice = 0;
+        }
+        else if (segmentIndex == 1)
+        {
+            canvas.FillColor = Color.FromArgb("#00DD00");  // Green for second segment
+            colorChoice = 1;
+        }
+        else
+        {
+            // Alternating tan for remaining segments
+            bool isEven = (segmentIndex % 2) == 0;
+            canvas.FillColor = isEven 
+                ? Color.FromArgb("#D4A96A")    // wood color (light tan)
+                : Color.FromArgb("#C9934C");   // darker tan for contrast
+            colorChoice = 2;
+        }
 
         canvas.FillPath(path);
 
