@@ -170,6 +170,10 @@ public class PdfExportService
             DrawRingMiterAngleGuides(canvas, cx, ringCy,
                 (float)R_o * PtPerCm, (float)R_i * PtPerCm, halfAngleRad, (float)sinA, (float)cosA);
 
+            // 4c. Outer and inner arc reference guides
+            DrawPdfOuterArc(canvas, cx, ringCy, (float)R_o * PtPerCm, halfAngleRad);
+            DrawPdfInnerArc(canvas, cx, ringCy, (float)R_i * PtPerCm, halfAngleRad);
+
             // 5. Annotations
             DrawRingBoardAnnotations(canvas, ringData, cx, bLeft, bTop, boardWPt, boardHPt,
                 ringCy, halfAngleRad, sinA, cosA, boardWidthCm, minBW);
@@ -237,6 +241,54 @@ public class PdfExportService
 
         // Draw right miter angle guide: line from outer to inner arc endpoints
         canvas.DrawLine(outerRightX, outerRightY, innerRightX, innerRightY, miterPaint);
+    }
+
+    /// <summary>
+    /// Draw the outer arc as a reference guide (red dashed line) in the PDF.
+    /// Shows the arc that the outer edge of the trapezoid follows in the ring.
+    /// </summary>
+    private static void DrawPdfOuterArc(SKCanvas canvas, float cx, float ringCy, float roPt, double halfRad)
+    {
+        using var arcPaint = StrokePaint("#CC0000", 0.6f, new[] { 3f, 2f });
+        const int arcSteps = 80;
+
+        for (int i = 0; i <= arcSteps; i++)
+        {
+            double t = -Math.PI / 2 - halfRad + i * 2 * halfRad / arcSteps;
+            float x = cx + roPt * (float)Math.Cos(t);
+            float y = ringCy + roPt * (float)Math.Sin(t);
+
+            if (i == 0) continue;
+
+            double prevT = -Math.PI / 2 - halfRad + (i - 1) * 2 * halfRad / arcSteps;
+            float prevX = cx + roPt * (float)Math.Cos(prevT);
+            float prevY = ringCy + roPt * (float)Math.Sin(prevT);
+            canvas.DrawLine(prevX, prevY, x, y, arcPaint);
+        }
+    }
+
+    /// <summary>
+    /// Draw the inner arc as a reference guide (blue dashed line) in the PDF.
+    /// Shows the arc that the inner edge of the trapezoid follows in the ring.
+    /// </summary>
+    private static void DrawPdfInnerArc(SKCanvas canvas, float cx, float ringCy, float riPt, double halfRad)
+    {
+        using var arcPaint = StrokePaint("#0066CC", 0.6f, new[] { 3f, 2f });
+        const int arcSteps = 80;
+
+        for (int i = 0; i <= arcSteps; i++)
+        {
+            double t = -Math.PI / 2 - halfRad + i * 2 * halfRad / arcSteps;
+            float x = cx + riPt * (float)Math.Cos(t);
+            float y = ringCy + riPt * (float)Math.Sin(t);
+
+            if (i == 0) continue;
+
+            double prevT = -Math.PI / 2 - halfRad + (i - 1) * 2 * halfRad / arcSteps;
+            float prevX = cx + riPt * (float)Math.Cos(prevT);
+            float prevY = ringCy + riPt * (float)Math.Sin(prevT);
+            canvas.DrawLine(prevX, prevY, x, y, arcPaint);
+        }
     }
 
     private static void DrawRingBoardAnnotations(SKCanvas canvas, SegmentedRingOutput data,
