@@ -6,13 +6,13 @@ namespace NativeElements.Drawing;
 /// <summary>
 /// Renders the ring segment cutting guide.
 ///
-/// Geometry: the board rectangle contains both arcs entirely.
-///   • Board top edge  = outer arc PEAK (the outermost point of the arc)
-///   • Ring centre     = (cx, by + Ro·s)  — below the board top by the outer radius
-///   • Outer arc       = from left endpoint (inside board) up to peak (board top) back down to right endpoint
-///   • Inner arc       = bows upward inside the board; its endpoints sit at the minimum board-depth line
-///   • Top-corner waste = curved triangles at board top-left / top-right between board edge and outer arc
-///   • Bottom waste    = area below inner arc endpoints (if board wider than minimum)
+/// Geometry: the board rectangle contains both arcs entirely, and the segment is centered vertically.
+///   • Board top/bottom edges define the board thickness
+///   • Ring centre positioned so outer and inner arcs are vertically centered on the board
+///   • Outer arc = from left endpoint up to peak, back down to right endpoint
+///   • Inner arc = bows upward inside the board; its endpoints at outer-arc-endpoint level
+///   • Top/bottom waste = curved areas between board edges and arcs (symmetric)
+///   • Side waste = miter cut areas on left/right
 /// </summary>
 public class RingDrawable : IDrawable
 {
@@ -53,11 +53,14 @@ public class RingDrawable : IDrawable
         float roPx   = (float)R_o * s;
         float riPx   = (float)R_i * s;
 
-        // Board top = outer arc peak
+        // Board top; segment centered on board
         float bx     = padLeft;
         float by     = padTopBase;
         float cx     = bx + boardW / 2f;
-        float ringCy = by + roPx;    // ring centre is Ro·s below the board top
+        // ring centre: segment is centered vertically on the board
+        // segment spans from (ringCy - roPx) to (ringCy - riPx·cosA)
+        // centered means: ringCy - (roPx + riPx·cosA)/2 = by + boardH/2
+        float ringCy = by + boardH / 2f + (roPx + riPx * (float)cosA) / 2f;
 
         DrawGrid(canvas, dirtyRect, s);
         DrawBoardWaste(canvas, bx, by, boardW, boardH);

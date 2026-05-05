@@ -127,9 +127,10 @@ public class PdfExportService
             float pageHeightPt = boardHPt + MarginPt + titleAreaPt + botReservePt;
 
             float bLeft  = leftResvPt;
-            float bTop   = MarginPt + titleAreaPt;    // board top = outer arc peak
+            float bTop   = MarginPt + titleAreaPt;
             float cx     = bLeft + boardWPt / 2f;
-            float ringCy = bTop + (float)R_o * PtPerCm;   // ring centre Ro below board top
+            // ring centre: segment is centered vertically on the board
+            float ringCy = bTop + boardHPt / 2f + ((float)R_o * PtPerCm + (float)R_i * (float)cosA * PtPerCm) / 2f;
 
             var filePath = PdfPath(fileName);
             using var stream = File.OpenWrite(filePath);
