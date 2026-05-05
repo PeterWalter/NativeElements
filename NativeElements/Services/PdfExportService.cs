@@ -179,22 +179,22 @@ public class PdfExportService
     }
 
     /// <summary>
-    /// Closed segment path: outer arc (peak = bTop) → right miter → inner arc → left miter (close).
-    /// The outer arc peak sits at y = bTop (board top = ring centre minus R_o).
+    /// Closed segment path: straight outer chord → right miter → inner arc → left miter (close).
+    /// Segment is a trapezoid with straight top (outer chord) and curved bottom (inner arc).
     /// </summary>
     private static SKPath BuildBoardViewSegmentPath(float cx, float ringCy,
         float roPt, float riPt, double halfRad, int steps = 80)
     {
         var path = new SKPath();
 
-        // Outer arc: t from −α (left endpoint) → 0 (peak at board top) → +α (right endpoint)
-        for (int i = 0; i <= steps; i++)
-        {
-            double t  = -halfRad + i * 2.0 * halfRad / steps;
-            float  px = cx + roPt * (float)Math.Sin(t);
-            float  py = ringCy - roPt * (float)Math.Cos(t);
-            if (i == 0) path.MoveTo(px, py); else path.LineTo(px, py);
-        }
+        // Outer chord: straight line from left endpoint to right endpoint
+        float outerLeftX  = cx - roPt * (float)Math.Sin(halfRad);
+        float outerLeftY  = ringCy - roPt * (float)Math.Cos(halfRad);
+        float outerRightX = cx + roPt * (float)Math.Sin(halfRad);
+        float outerRightY = ringCy - roPt * (float)Math.Cos(halfRad);
+
+        path.MoveTo(outerLeftX, outerLeftY);
+        path.LineTo(outerRightX, outerRightY);
 
         // Inner arc: t from +α → 0 → −α (first LineTo = right miter; Close = left miter)
         for (int i = 0; i <= steps; i++)

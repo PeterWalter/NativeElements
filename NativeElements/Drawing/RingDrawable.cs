@@ -8,11 +8,11 @@ namespace NativeElements.Drawing;
 ///
 /// Geometry: the board rectangle contains both arcs entirely, and the segment is centered vertically.
 ///   • Board top/bottom edges define the board thickness
-///   • Ring centre positioned so outer and inner arcs are vertically centered on the board
-///   • Outer arc = from left endpoint up to peak, back down to right endpoint
-///   • Inner arc = bows upward inside the board; its endpoints at outer-arc-endpoint level
-///   • Top/bottom waste = curved areas between board edges and arcs (symmetric)
-///   • Side waste = miter cut areas on left/right
+///   • Ring centre positioned so segment is vertically centered on board
+///   • Segment shape: trapezoid with straight outer edge (chord) and curved inner edge (arc)
+///   • Outer edge = straight chord from left endpoint to right endpoint
+///   • Inner edge = curved arc; endpoints at outer-chord level
+///   • Side edges = angled miter cuts at ±α
 /// </summary>
 public class RingDrawable : IDrawable
 {
@@ -74,23 +74,23 @@ public class RingDrawable : IDrawable
     // ── Segment path ──────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Closed path: outer arc (peak at board top) → right miter → inner arc → left miter (close).
+    /// Closed path: straight outer chord → right miter → inner arc → left miter (close).
+    /// Segment is a trapezoid with straight top (outer chord) and curved bottom (inner arc).
     /// </summary>
     private static PathF BuildSegmentPath(float cx, float ringCy, float roPx, float riPx, double alpha)
     {
         var path = new PathF();
 
-        // Outer arc: t from −α (left endpoint) → 0 (peak, board top) → +α (right endpoint)
-        for (int i = 0; i <= ArcSteps; i++)
-        {
-            double t  = -alpha + i * 2.0 * alpha / ArcSteps;
-            float  px = cx + roPx * (float)Math.Sin(t);
-            float  py = ringCy - roPx * (float)Math.Cos(t);
-            if (i == 0) path.MoveTo(px, py); else path.LineTo(px, py);
-        }
+        // Outer chord: straight line from left endpoint to right endpoint
+        float outerLeftX  = cx - roPx * (float)Math.Sin(alpha);
+        float outerLeftY  = ringCy - roPx * (float)Math.Cos(alpha);
+        float outerRightX = cx + roPx * (float)Math.Sin(alpha);
+        float outerRightY = ringCy - roPx * (float)Math.Cos(alpha);
+
+        path.MoveTo(outerLeftX, outerLeftY);
+        path.LineTo(outerRightX, outerRightY);
 
         // Inner arc: t from +α (right endpoint) → 0 (inner peak) → −α (left endpoint)
-        // First LineTo is the right miter cut; Close() handles the left miter cut.
         for (int i = 0; i <= ArcSteps; i++)
         {
             double t  = alpha - i * 2.0 * alpha / ArcSteps;
