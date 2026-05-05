@@ -105,9 +105,10 @@ public class PdfExportService
             double halfAngleRad = ringData.MiterAngle * Math.PI / 180.0;
             double sinA = Math.Sin(halfAngleRad);
             double cosA = Math.Cos(halfAngleRad);
+            double tanA = Math.Tan(halfAngleRad);
 
             // Board physical dimensions at 1:1 scale (cm → pts)
-            float Lo   = (float)(2.0 * R_o * sinA);    // outer chord = board width
+            float Lo   = (float)(2.0 * R_o * tanA);    // outer chord using tan formula
             float minBW       = ringData.MinBoardWidth > 0
                                 ? (float)ringData.MinBoardWidth
                                 : (float)(R_o - R_i * cosA);
@@ -179,24 +180,24 @@ public class PdfExportService
     }
 
     /// <summary>
-    /// Closed segment path: straight outer chord → right miter → inner arc → left miter (close).
-    /// Segment is a trapezoid with straight top (outer chord) and curved bottom (inner arc).
+    /// Closed segment path: straight outer chord (tan formula) → right miter → inner arc (sin formula) → left miter (close).
+    /// Matches the woodturning reference calculator formulas.
     /// </summary>
     private static SKPath BuildBoardViewSegmentPath(float cx, float ringCy,
         float roPt, float riPt, double halfRad, int steps = 80)
     {
         var path = new SKPath();
 
-        // Outer chord: straight line from left endpoint to right endpoint
-        float outerLeftX  = cx - roPt * (float)Math.Sin(halfRad);
+        // Outer chord: straight line from left to right using tan formula for X
+        float outerLeftX  = cx - roPt * (float)Math.Tan(halfRad);
         float outerLeftY  = ringCy - roPt * (float)Math.Cos(halfRad);
-        float outerRightX = cx + roPt * (float)Math.Sin(halfRad);
+        float outerRightX = cx + roPt * (float)Math.Tan(halfRad);
         float outerRightY = ringCy - roPt * (float)Math.Cos(halfRad);
 
         path.MoveTo(outerLeftX, outerLeftY);
         path.LineTo(outerRightX, outerRightY);
 
-        // Inner arc: t from +α → 0 → −α (first LineTo = right miter; Close = left miter)
+        // Inner arc: t from +α → 0 → −α using sin formula (first LineTo = right miter; Close = left miter)
         for (int i = 0; i <= steps; i++)
         {
             double t  = halfRad - i * 2.0 * halfRad / steps;

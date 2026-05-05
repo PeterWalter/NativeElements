@@ -29,9 +29,10 @@ public class RingDrawable : IDrawable
         double alpha = d.MiterAngle * Math.PI / 180.0;
         double sinA  = Math.Sin(alpha);
         double cosA  = Math.Cos(alpha);
+        double tanA  = Math.Tan(alpha);
         double R_o   = d.OuterRadius;
         double R_i   = d.InnerRadius;
-        double Lo    = 2.0 * R_o * sinA;   // outer chord = board width (cm)
+        double Lo    = 2.0 * R_o * tanA;   // outer chord using tan formula
 
         double minBW       = d.MinBoardWidth > 0 ? d.MinBoardWidth : (R_o - R_i * cosA);
         double boardWidthCm = (d.UserBoardWidthUsed > 0 && d.UserBoardWidthUsed >= minBW)
@@ -75,22 +76,23 @@ public class RingDrawable : IDrawable
 
     /// <summary>
     /// Closed path: straight outer chord → right miter → inner arc → left miter (close).
-    /// Segment is a trapezoid with straight top (outer chord) and curved bottom (inner arc).
+    /// Segment is a trapezoid with straight top (outer chord using tan) and curved bottom (inner arc using sin).
     /// </summary>
     private static PathF BuildSegmentPath(float cx, float ringCy, float roPx, float riPx, double alpha)
     {
         var path = new PathF();
 
-        // Outer chord: straight line from left endpoint to right endpoint
-        float outerLeftX  = cx - roPx * (float)Math.Sin(alpha);
+        // Outer chord: straight line from left to right using tan formula for X
+        float outerLeftX  = cx - roPx * (float)Math.Tan(alpha);
         float outerLeftY  = ringCy - roPx * (float)Math.Cos(alpha);
-        float outerRightX = cx + roPx * (float)Math.Sin(alpha);
+        float outerRightX = cx + roPx * (float)Math.Tan(alpha);
         float outerRightY = ringCy - roPx * (float)Math.Cos(alpha);
 
         path.MoveTo(outerLeftX, outerLeftY);
         path.LineTo(outerRightX, outerRightY);
 
         // Inner arc: t from +α (right endpoint) → 0 (inner peak) → −α (left endpoint)
+        // Inner endpoints: use sin formula for consistency with reference calculator
         for (int i = 0; i <= ArcSteps; i++)
         {
             double t  = alpha - i * 2.0 * alpha / ArcSteps;

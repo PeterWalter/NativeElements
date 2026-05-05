@@ -18,11 +18,12 @@ public class SegmentedRingMathService
         double halfAngle  = angleRad / 2.0;           // miter angle in radians
         double sinA       = Math.Sin(halfAngle);
         double cosA       = Math.Cos(halfAngle);
+        double tanA       = Math.Tan(halfAngle);
 
-        // Outer edge length: chord length formula
-        double outerEdgeLength = 2 * input.OuterRadius * sinA;
+        // Outer edge length: using tan formula (matches woodturning reference)
+        double outerEdgeLength = 2 * input.OuterRadius * tanA;
 
-        // Inner edge length
+        // Inner edge length: using sin formula
         double innerEdgeLength = 2 * input.InnerRadius * sinA;
 
         // Radial edge (straight sides)
